@@ -23,6 +23,13 @@ export default class PoseProcessor {
         this.video.srcObject = stream;
       }
       await this.video.play();
+
+      if (this.video.readyState < 1) {
+        await new Promise(resolve => {
+          this.video.addEventListener('loadedmetadata', resolve, { once: true });
+        });
+      }
+
       this.canvas.width = this.video.videoHeight * 4 / 3;
       this.canvas.height = this.video.videoHeight;
       if (DEBUG) console.log('Webcam started');
