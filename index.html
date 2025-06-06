@@ -58,9 +58,12 @@
       position: absolute;
       top: 0;
       left: 0;
+      width: 100%;
       padding: 1vh;
       color: #fff;
       font-size: 2vh;
+      display: flex;
+      justify-content: space-between;
     }
   </style>
 
@@ -70,7 +73,7 @@
     <button id="start-btn">START</button>
   </section>
 
-  <section id="game-screen" class="screen"><div class="video-container"><canvas id="game-canvas"></canvas></div><div id="hud"><span id="timer"></span><span id="score" style="margin-left:20px"></span></div></section>
+  <section id="game-screen" class="screen"><div class="video-container"><video id="game-video" autoplay muted playsinline></video><canvas id="game-canvas"></canvas></div><div id="hud"><span id="timer"></span><span id="score"></span></div></section>
 
   <!-- External libraries for pose detection -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>

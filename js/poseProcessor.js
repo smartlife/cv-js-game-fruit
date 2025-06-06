@@ -18,8 +18,10 @@ export default class PoseProcessor {
       this.canvas.width = this.canvas.height * 4 / 3;
       if (DEBUG) console.log('PoseProcessor using stub');
     } else {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      this.video.srcObject = stream;
+      if (!this.video.srcObject) {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        this.video.srcObject = stream;
+      }
       await this.video.play();
       this.canvas.width = this.video.videoHeight * 4 / 3;
       this.canvas.height = this.video.videoHeight;
@@ -43,23 +45,25 @@ export default class PoseProcessor {
 
   drawPalms(hands) {
     if (!hands) return;
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    this.ctx.fillStyle = 'rgba(255,0,0,0.5)';
     ['left', 'right'].forEach(side => {
       const h = hands[side];
-      if (h) {
-        this.ctx.beginPath();
-        const r = this.canvas.height * 0.03;
-        this.ctx.arc(h.x, h.y, r, 0, Math.PI * 2);
-        this.ctx.fill();
-      }
+      if (!h) return;
+      const r = this.canvas.height * 0.03;
+      this.ctx.fillStyle = h.active ? 'rgba(255,0,0,0.7)' : 'rgba(255,255,255,0.7)';
+      this.ctx.beginPath();
+      this.ctx.arc(h.x, h.y, r, 0, Math.PI * 2);
+      this.ctx.fill();
+      this.ctx.fillStyle = h.active ? 'red' : 'white';
+      this.ctx.font = `${r * 1.2}px sans-serif`;
+      this.ctx.fillText(Math.round(h.speed), h.x + r + 2, h.y - r - 2);
     });
     if (DEBUG) console.log('Palms drawn');
   }
 
-  async update(dt) {
+  async update(dt, draw = true) {
     let left = null;
     let right = null;
+    const threshold = this.canvas.height * 0.1;
     if (USE_STUB) {
       this.fakeT += dt;
       const amp = this.canvas.height * 0.3;
@@ -90,20 +94,25 @@ export default class PoseProcessor {
         vx: (left.x - this.prevLeft.x) / dt,
         vy: (left.y - this.prevLeft.y) / dt
       } : { vx: 0, vy: 0 };
-      hands.left = { ...left, ...v, speed: Math.hypot(v.vx, v.vy) };
+      const speed = Math.hypot(v.vx, v.vy);
+      hands.left = { ...left, ...v, speed, active: speed > threshold };
     }
     if (right) {
       const v = this.prevRight && dt > 0 ? {
         vx: (right.x - this.prevRight.x) / dt,
         vy: (right.y - this.prevRight.y) / dt
       } : { vx: 0, vy: 0 };
-      hands.right = { ...right, ...v, speed: Math.hypot(v.vx, v.vy) };
+      const speed = Math.hypot(v.vx, v.vy);
+      hands.right = { ...right, ...v, speed, active: speed > threshold };
     }
 
     this.prevLeft = left;
     this.prevRight = right;
 
-    this.drawPalms(hands);
+    if (draw) {
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      this.drawPalms(hands);
+    }
     if (DEBUG) console.log('Hands', hands);
     return hands;
   }

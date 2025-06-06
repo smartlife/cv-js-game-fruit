@@ -53,7 +53,7 @@ export default class StartMode {
       if (!h) return;
       const x = canvasRect.left + (h.x / this.canvas.width) * canvasRect.width;
       const y = canvasRect.top + (h.y / this.canvas.height) * canvasRect.height;
-      if (h.speed > 1000 && x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+      if (h.active && x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
         this.startGame();
       }
     });
