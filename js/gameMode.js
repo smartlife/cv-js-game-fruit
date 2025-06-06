@@ -10,7 +10,7 @@ export default class GameMode {
     this.scoreEl = document.getElementById('score');
     this.canvas = document.getElementById('game-canvas');
     this.ctx = this.canvas.getContext('2d');
-    this.video = document.getElementById('intro-video');
+    this.video = document.getElementById('game-video');
     this.pose = new PoseProcessor(this.video, this.canvas);
     this.time = 60;
     this.score = 0;
@@ -62,7 +62,7 @@ export default class GameMode {
       if (!f.alive) return;
       ['left', 'right'].forEach(side => {
         const h = hands[side];
-        if (!h || h.speed < 1000) return;
+        if (!h || !h.active) return;
         const dx = h.x - f.x;
         const dy = h.y - f.y;
         const dist = Math.hypot(dx, dy);
@@ -91,12 +91,13 @@ export default class GameMode {
       this.spawnTimer = 0;
     }
 
-    const hands = await this.pose.update(dt);
+    const hands = await this.pose.update(dt, false);
     this.fruits.forEach(f => f.update(dt));
     this.checkCollisions(hands);
 
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.fruits.forEach(f => f.draw(this.ctx));
+    this.pose.drawPalms(hands);
 
     this.updateDisplay();
     this.animationId = requestAnimationFrame(this.loop);
