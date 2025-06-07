@@ -1,4 +1,4 @@
-import { DEBUG, USE_STUB } from './config.js';
+import { DEBUG, USE_STUB, MIN_KP_SCORE } from './config.js';
 
 export default class PoseProcessor {
   constructor(videoElement, canvasElement) {
@@ -88,11 +88,11 @@ export default class PoseProcessor {
         const scaleY = this.canvas.height / this.video.videoHeight;
         const leftKP = pose.keypoints.find(p => p.name === 'left_wrist');
         const rightKP = pose.keypoints.find(p => p.name === 'right_wrist');
-        if (leftKP && leftKP.score > 0.5) {
+        if (leftKP && leftKP.score > MIN_KP_SCORE) {
           const x = leftKP.x * scaleX;
           left = { x: this.canvas.width - x, y: leftKP.y * scaleY };
         }
-        if (rightKP && rightKP.score > 0.5) {
+        if (rightKP && rightKP.score > MIN_KP_SCORE) {
           const x = rightKP.x * scaleX;
           right = { x: this.canvas.width - x, y: rightKP.y * scaleY };
         }
