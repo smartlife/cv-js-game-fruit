@@ -7,7 +7,7 @@ export default class StartMode {
     this.container = document.getElementById('start-screen');
     this.video = document.getElementById('intro-video');
     this.canvas = document.getElementById('intro-canvas');
-    this.startBtn = document.getElementById('start-btn');
+    this.startFruit = document.getElementById('start-fruit');
     this.pose = new PoseProcessor(this.video, this.canvas);
     this.animationId = null;
     this.lastTime = 0;
@@ -17,7 +17,6 @@ export default class StartMode {
   async enter() {
     this.container.style.display = 'block';
     await this.pose.init();
-    this.startBtn.addEventListener('click', this.startGame);
     this.lastTime = performance.now();
     this.loop(this.lastTime);
     if (DEBUG) console.log('StartMode enter');
@@ -26,7 +25,6 @@ export default class StartMode {
   exit = () => {
     this.container.style.display = 'none';
     cancelAnimationFrame(this.animationId);
-    this.startBtn.removeEventListener('click', this.startGame);
     if (DEBUG) console.log('StartMode exit');
   };
 
@@ -46,7 +44,7 @@ export default class StartMode {
 
   checkStartCut(hands) {
     if (!hands) return;
-    const rect = this.startBtn.getBoundingClientRect();
+    const rect = this.startFruit.getBoundingClientRect();
     const canvasRect = this.canvas.getBoundingClientRect();
     ['left', 'right'].forEach(side => {
       const h = hands[side];

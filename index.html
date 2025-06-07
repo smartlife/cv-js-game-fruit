@@ -39,13 +39,17 @@
       height: 100%;
       object-fit: cover;
     }
-    #start-btn {
+    .video-container video {
+      transform: scaleX(-1);
+    }
+    #start-fruit {
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      padding: 2vh 4vh;
-      font-size: 3vh;
+      width: 15vh;
+      height: 15vh;
+      pointer-events: none;
     }
     #game-canvas {
       position: absolute;
@@ -70,7 +74,7 @@
 </head>
 <body>
   <section id="start-screen" class="screen"><div class="video-container"><video id="intro-video" autoplay muted playsinline></video><canvas id="intro-canvas"></canvas></div>
-    <button id="start-btn">START</button>
+    <img id="start-fruit" src="fruit.png" alt="Start">
   </section>
 
   <section id="game-screen" class="screen"><div class="video-container"><video id="game-video" autoplay muted playsinline></video><canvas id="game-canvas"></canvas></div><div id="hud"><span id="timer"></span><span id="score"></span></div></section>

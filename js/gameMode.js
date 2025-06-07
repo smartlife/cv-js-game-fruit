@@ -70,6 +70,7 @@ export default class GameMode {
           f.alive = false;
           this.score += f.score;
           if (DEBUG) console.log('Fruit cut', f);
+          this.updateDisplay();
         }
       });
     });
