@@ -84,13 +84,17 @@ export default class PoseProcessor {
     } else {
       const pose = await this.estimate();
       if (pose) {
+        const scaleX = this.canvas.width / this.video.videoWidth;
+        const scaleY = this.canvas.height / this.video.videoHeight;
         const leftKP = pose.keypoints.find(p => p.name === 'left_wrist');
         const rightKP = pose.keypoints.find(p => p.name === 'right_wrist');
         if (leftKP && leftKP.score > 0.5) {
-          left = { x: leftKP.x, y: leftKP.y };
+          const x = leftKP.x * scaleX;
+          left = { x: this.canvas.width - x, y: leftKP.y * scaleY };
         }
         if (rightKP && rightKP.score > 0.5) {
-          right = { x: rightKP.x, y: rightKP.y };
+          const x = rightKP.x * scaleX;
+          right = { x: this.canvas.width - x, y: rightKP.y * scaleY };
         }
       }
     }
