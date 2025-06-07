@@ -89,10 +89,12 @@ export default class PoseProcessor {
         const leftKP = pose.keypoints.find(p => p.name === 'left_wrist');
         const rightKP = pose.keypoints.find(p => p.name === 'right_wrist');
         if (leftKP && leftKP.score > 0.5) {
-          left = { x: leftKP.x * scaleX, y: leftKP.y * scaleY };
+          const x = leftKP.x * scaleX;
+          left = { x: this.canvas.width - x, y: leftKP.y * scaleY };
         }
         if (rightKP && rightKP.score > 0.5) {
-          right = { x: rightKP.x * scaleX, y: rightKP.y * scaleY };
+          const x = rightKP.x * scaleX;
+          right = { x: this.canvas.width - x, y: rightKP.y * scaleY };
         }
       }
     }
