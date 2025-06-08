@@ -31,11 +31,14 @@ export default class StartMode {
   exit = () => {
     this.container.style.display = 'none';
     cancelAnimationFrame(this.animationId);
+    this.pose.stop();
     debug('StartMode exit');
   };
 
   startGame = () => {
     debug('Switching to game');
+    this.manager.level = 0;
+    this.manager.lastScore = 0;
     this.manager.switchTo('game');
   };
 

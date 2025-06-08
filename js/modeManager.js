@@ -4,6 +4,8 @@ export default class ModeManager {
   constructor() {
     this.modes = {};
     this.current = null;
+    this.level = 0;
+    this.lastScore = 0;
     debug('ModeManager created');
   }
 
