@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Fruit Cut Game</title>
+  <title>Fruit slice game</title>
   <style>
     body {
       margin: 0;
@@ -60,6 +60,17 @@
       padding: 1vh;
       box-sizing: border-box;
     }
+    #instruction-text {
+      position: absolute;
+      top: 0;
+      width: 100%;
+      text-align: center;
+      color: #fff;
+      font-size: 3vh;
+      background: rgba(0, 64, 0, 0.6);
+      padding: 1vh;
+      box-sizing: border-box;
+    }
     #game-canvas {
       position: absolute;
       top: 0;
@@ -111,6 +122,7 @@
 </head>
 <body>
   <section id="start-screen" class="screen"><div class="video-container"><video id="intro-video" autoplay muted playsinline></video><canvas id="intro-canvas"></canvas></div>
+    <div id="instruction-text">Enable webcam and show hands — they control the game.</div>
     <div id="start-text">Slice the fruit by hand to play</div>
     <img id="start-fruit" alt="Start">
   </section>
