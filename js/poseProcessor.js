@@ -1,4 +1,4 @@
-import { DEBUG, USE_STUB, MIN_KP_SCORE, debug } from './config.js';
+import { DEBUG, USE_STUB, MIN_KP_SCORE, ACTIVE_SPEED_FRACTION, debug } from './config.js';
 
 export default class PoseProcessor {
   static stream = null;       // shared webcam MediaStream
@@ -74,16 +74,14 @@ export default class PoseProcessor {
       this.ctx.beginPath();
       this.ctx.arc(h.x, h.y, r, 0, Math.PI * 2);
       this.ctx.fill();
-      this.ctx.fillStyle = h.active ? 'red' : 'white';
-      this.ctx.font = `${r * 1.2}px sans-serif`;
-      this.ctx.fillText(Math.round(h.speed), h.x + r + 2, h.y - r - 2);
+      // Palm speed is no longer displayed
     });
   }
 
   async update(dt, draw = true) {
     let left = null;
     let right = null;
-    const threshold = this.canvas.height * 0.1;
+    const threshold = this.canvas.height * ACTIVE_SPEED_FRACTION;
     if (USE_STUB) {
       this.fakeT += dt;
       const amp = this.canvas.height * 0.3;
