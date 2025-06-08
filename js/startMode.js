@@ -1,5 +1,5 @@
 import PoseProcessor from './poseProcessor.js';
-import { DEBUG, debug } from './config.js';
+import { DEBUG, debug, TIME_SPEED } from './config.js';
 
 export default class StartMode {
   constructor(manager) {
@@ -35,9 +35,9 @@ export default class StartMode {
   };
 
   loop = async (timestamp) => {
-    const dt = (timestamp - this.lastTime) / 1000;
+    const realDt = (timestamp - this.lastTime) / 1000;
     this.lastTime = timestamp;
-    const hands = await this.pose.update(dt);
+    const hands = await this.pose.update(realDt);
     this.checkStartCut(hands);
     this.animationId = requestAnimationFrame(this.loop);
   };
