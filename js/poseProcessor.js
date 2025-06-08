@@ -1,11 +1,14 @@
 import { DEBUG, USE_STUB, MIN_KP_SCORE, debug } from './config.js';
 
 export default class PoseProcessor {
+  static stream = null;       // shared webcam MediaStream
+  static detector = null;     // shared pose detection model
+
   constructor(videoElement, canvasElement) {
     this.video = videoElement;
     this.canvas = canvasElement;
     this.ctx = this.canvas.getContext('2d');
-    this.detector = null; // will hold pose detection model
+    this.detector = null; // will reference the shared detector
     this.prevLeft = null;
     this.prevRight = null;
   }
@@ -18,9 +21,13 @@ export default class PoseProcessor {
       this.canvas.width = this.canvas.height * 4 / 3;
       debug('PoseProcessor using stub');
     } else {
-      if (!this.video.srcObject) {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        this.video.srcObject = stream;
+      if (!PoseProcessor.stream) {
+        PoseProcessor.stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        debug('Webcam started');
+      }
+
+      if (this.video.srcObject !== PoseProcessor.stream) {
+        this.video.srcObject = PoseProcessor.stream;
       }
       await this.video.play();
 
@@ -32,16 +39,18 @@ export default class PoseProcessor {
 
       this.canvas.width = this.video.videoHeight * 4 / 3;
       this.canvas.height = this.video.videoHeight;
-      debug('Webcam started');
     }
 
     // load external pose detection library (placeholder)
     if (window.poseDetection) {
       try {
-        this.detector = await poseDetection.createDetector(
-          poseDetection.SupportedModels.MoveNet
-        );
-        debug('Pose detector loaded');
+        if (!PoseProcessor.detector) {
+          PoseProcessor.detector = await poseDetection.createDetector(
+            poseDetection.SupportedModels.MoveNet
+          );
+          debug('Pose detector loaded');
+        }
+        this.detector = PoseProcessor.detector;
       } catch (err) {
         console.error('Failed to load pose detector:', err);
       }
@@ -135,10 +144,10 @@ export default class PoseProcessor {
   stop() {
     if (USE_STUB) return;
     if (this.video && this.video.srcObject) {
+      // Only pause playback to keep the shared webcam stream alive
       this.video.pause();
-      this.video.srcObject.getTracks().forEach(t => t.stop());
       this.video.srcObject = null;
-      debug('Webcam stopped');
     }
   }
 }
+

@@ -25,7 +25,6 @@ export default class StartMode {
   exit = () => {
     this.container.style.display = 'none';
     cancelAnimationFrame(this.animationId);
-    this.pose.stop();
     debug('StartMode exit');
   };
 
@@ -39,7 +38,9 @@ export default class StartMode {
     this.lastTime = timestamp;
     const hands = await this.pose.update(realDt);
     this.checkStartCut(hands);
-    this.animationId = requestAnimationFrame(this.loop);
+    if (this.manager.current === 'start') {
+      this.animationId = requestAnimationFrame(this.loop);
+    }
   };
 
   checkStartCut(hands) {
