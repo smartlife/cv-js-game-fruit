@@ -1,6 +1,6 @@
 import PoseProcessor from './poseProcessor.js';
 import Fruit from './fruit.js';
-import { DEBUG } from './config.js';
+import { DEBUG, debug } from './config.js';
 
 export default class GameMode {
   constructor(manager) {
@@ -18,7 +18,7 @@ export default class GameMode {
     this.spawnTimer = 0;
     this.animationId = null;
     this.lastTime = 0;
-    if (DEBUG) console.log('GameMode created');
+    debug('GameMode created');
   }
 
   async enter() {
@@ -30,19 +30,19 @@ export default class GameMode {
     this.updateDisplay();
     this.lastTime = performance.now();
     this.loop(this.lastTime);
-    if (DEBUG) console.log('GameMode enter');
+    debug('GameMode enter');
   }
 
   exit() {
     this.container.style.display = 'none';
     cancelAnimationFrame(this.animationId);
-    if (DEBUG) console.log('GameMode exit');
+    this.pose.stop();
+    debug('GameMode exit');
   }
 
   updateDisplay() {
     this.timerEl.textContent = `Time: ${this.time.toFixed(1)}`;
     this.scoreEl.textContent = `Score: ${this.score}`;
-    if (DEBUG) console.log('Update display', this.time, this.score);
   }
 
   spawnFruit() {
@@ -52,9 +52,9 @@ export default class GameMode {
     const vx = side === 'left' ? 200 + Math.random() * 200 : -200 - Math.random() * 200;
     const vy = -600 - Math.random() * 200;
     const radius = this.canvas.height * 0.05;
-    const fruit = new Fruit('fruit.png', x, this.canvas.height - 10, vx, vy, radius);
+    const fruit = new Fruit('fruit.png', x, y, vx, vy, radius);
     this.fruits.push(fruit);
-    if (DEBUG) console.log('Spawn fruit', fruit);
+    debug('Spawn fruit', fruit);
   }
 
   checkCollisions(hands) {
@@ -69,7 +69,7 @@ export default class GameMode {
         if (dist < f.radius + 20) {
           f.alive = false;
           this.score += f.score;
-          if (DEBUG) console.log('Fruit cut', f);
+          debug('Fruit cut', f);
           this.updateDisplay();
         }
       });
@@ -81,7 +81,6 @@ export default class GameMode {
     const dt = (timestamp - this.lastTime) / 1000;
     this.lastTime = timestamp;
     this.time -= dt;
-    if (DEBUG) console.log('Game loop dt', dt);
     if (this.time <= 0) {
       this.manager.switchTo('start');
       return;

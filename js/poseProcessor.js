@@ -1,4 +1,4 @@
-import { DEBUG, USE_STUB, MIN_KP_SCORE } from './config.js';
+import { DEBUG, USE_STUB, MIN_KP_SCORE, debug } from './config.js';
 
 export default class PoseProcessor {
   constructor(videoElement, canvasElement) {
@@ -16,7 +16,7 @@ export default class PoseProcessor {
       this.fakeT = 0;
       this.canvas.height = this.video.videoHeight || this.canvas.clientHeight;
       this.canvas.width = this.canvas.height * 4 / 3;
-      if (DEBUG) console.log('PoseProcessor using stub');
+      debug('PoseProcessor using stub');
     } else {
       if (!this.video.srcObject) {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -32,14 +32,19 @@ export default class PoseProcessor {
 
       this.canvas.width = this.video.videoHeight * 4 / 3;
       this.canvas.height = this.video.videoHeight;
-      if (DEBUG) console.log('Webcam started');
+      debug('Webcam started');
     }
 
     // load external pose detection library (placeholder)
     if (window.poseDetection) {
-      this.detector = await poseDetection.createDetector(
-        poseDetection.SupportedModels.MoveNet
-      );
+      try {
+        this.detector = await poseDetection.createDetector(
+          poseDetection.SupportedModels.MoveNet
+        );
+        debug('Pose detector loaded');
+      } catch (err) {
+        console.error('Failed to load pose detector:', err);
+      }
     }
   }
 
@@ -64,7 +69,6 @@ export default class PoseProcessor {
       this.ctx.font = `${r * 1.2}px sans-serif`;
       this.ctx.fillText(Math.round(h.speed), h.x + r + 2, h.y - r - 2);
     });
-    if (DEBUG) console.log('Palms drawn');
   }
 
   async update(dt, draw = true) {
@@ -124,7 +128,17 @@ export default class PoseProcessor {
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
       this.drawPalms(hands);
     }
-    if (DEBUG) console.log('Hands', hands);
+    // debug output removed to avoid per-frame spam
     return hands;
+  }
+
+  stop() {
+    if (USE_STUB) return;
+    if (this.video && this.video.srcObject) {
+      this.video.pause();
+      this.video.srcObject.getTracks().forEach(t => t.stop());
+      this.video.srcObject = null;
+      debug('Webcam stopped');
+    }
   }
 }
