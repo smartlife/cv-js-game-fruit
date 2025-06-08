@@ -4,42 +4,52 @@ export const LEVELS = [
   {
     speed: 0.5,
     fruits: [
-      { type: 'apple', priority: 1 },
-      { type: 'pear', priority: 0.5 },
-      { type: 'pineapple', priority: 1.5 },
-      { type: 'mandarine', priority: 0.5 },
+      { type: 'pineapple', priority: 5 },
+      { type: 'pear', priority: 1.5 },
+      { type: 'apple', priority: 0.1 },
     ],
   },
   
   {
     speed: 0.6,
     fruits: [
-      { type: 'apple', priority: 1 },
-      { type: 'pear', priority: 0.5 },
-      { type: 'pineapple', priority: 1.2 },
-      { type: 'mandarine', priority: 0.7 },
+      { type: 'pineapple', priority: 2 },
+      { type: 'pear', priority: 2 },
+      { type: 'apple', priority: 0.5 },
+      { type: 'mandarine', priority: 0.1 },
     ],
   },
   
   {
     speed: 0.7,
     fruits: [
-      { type: 'apple', priority: 1 },
-      { type: 'pear', priority: 0.5 },
-      { type: 'pineapple', priority: 1.1 },
-      { type: 'mandarine', priority: 0.8 },
+      { type: 'pineapple', priority: 1 },
+      { type: 'pear', priority: 2 },
+      { type: 'apple', priority: 2 },
+      { type: 'mandarine', priority: 0.5 },
     ],
   },    
 
   {
     speed: 0.8,
     fruits: [
-      { type: 'apple', priority: 1 },
-      { type: 'pear', priority: 0.5 },
-      { type: 'pineapple', priority: 1.0 },
-      { type: 'mandarine', priority: 0.9 },
+      { type: 'pineapple', priority: 1 },
+      { type: 'pear', priority: 2 },
+      { type: 'apple', priority: 2 },
+      { type: 'mandarine', priority: 1 },
     ],
   },    
+
+  {
+    speed: 0.9,
+    fruits: [
+      { type: 'pineapple', priority: 1 },
+      { type: 'pear', priority: 1 },
+      { type: 'apple', priority: 1 },
+      { type: 'mandarine', priority: 2 },
+    ],
+  },    
+
 
 ];
 
