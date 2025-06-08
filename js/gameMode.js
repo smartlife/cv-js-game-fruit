@@ -36,7 +36,6 @@ export default class GameMode {
   exit() {
     this.container.style.display = 'none';
     cancelAnimationFrame(this.animationId);
-    this.pose.stop();
     debug('GameMode exit');
   }
 
