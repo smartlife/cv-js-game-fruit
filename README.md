@@ -15,7 +15,8 @@ This repository now contains the initial structure of a pose‑controlled fruit 
 - **js/startMode.js** – displays the intro screen with live webcam feed. Cutting the start button with a fast hand movement begins the game.
 - **js/fruit.js** – small physics object representing a falling fruit.
 - **js/gameMode.js** – real‑time game loop that updates the timer, fruits and palm positions every frame.
-- **fruit.png** – image used for spawned fruits.
+- **img/** – folder with fruit images. The `basic` entry in `js/fruitConfig.js`
+  provides the image used for the start button.
 
 The code is written in small modules so that additional modes (for example a score screen or settings) can be added later by registering new mode classes with `ModeManager`.
 

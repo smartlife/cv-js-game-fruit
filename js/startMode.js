@@ -1,5 +1,6 @@
 import PoseProcessor from './poseProcessor.js';
 import { DEBUG, debug } from './config.js';
+import { FRUITS } from './fruitConfig.js';
 
 export default class StartMode {
   constructor(manager) {
@@ -8,6 +9,11 @@ export default class StartMode {
     this.video = document.getElementById('intro-video');
     this.canvas = document.getElementById('intro-canvas');
     this.startFruit = document.getElementById('start-fruit');
+    // Use the image and configured size of the basic fruit for the start button
+    this.startFruit.src = FRUITS.basic.image;
+    const size = `${FRUITS.basic.size * 100}vh`;
+    this.startFruit.style.width = size;
+    this.startFruit.style.height = size;
     this.pose = new PoseProcessor(this.video, this.canvas);
     this.animationId = null;
     this.lastTime = 0;
