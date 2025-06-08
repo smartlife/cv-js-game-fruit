@@ -3,6 +3,17 @@ import Fruit from './fruit.js';
 import { DEBUG, debug } from './config.js';
 import { LEVELS, chooseFruit } from './levelConfig.js';
 
+function samplePoisson(lambda) {
+  const L = Math.exp(-lambda);
+  let k = 0;
+  let p = 1;
+  do {
+    k++;
+    p *= Math.random();
+  } while (p > L);
+  return k - 1;
+}
+
 export default class GameMode {
   constructor(manager) {
     this.manager = manager;
@@ -14,10 +25,11 @@ export default class GameMode {
     this.ctx = this.canvas.getContext('2d');
     this.video = document.getElementById('game-video');
     this.pose = new PoseProcessor(this.video, this.canvas);
-    this.time = 60;
+    this.time = 0;
     this.score = 0;
     this.fruits = [];
     this.spawnTimer = 0;
+    this.fruitsPerSecond = 1;
     this.animationId = null;
     this.lastTime = 0;
     this.timeSpeed = 1;
@@ -28,10 +40,12 @@ export default class GameMode {
     this.container.style.display = 'block';
     await this.pose.init();
     this.level = this.manager.level;
-    this.timeSpeed = LEVELS[this.level].speed;
+    const levelCfg = LEVELS[this.level];
+    this.timeSpeed = levelCfg.speed;
+    this.fruitsPerSecond = levelCfg.fruitsPerSecond || 1;
     this.finished = false;
     this.timerEl.style.visibility = 'visible';
-    this.time = 60;
+    this.time = levelCfg.time;
     this.score = 0;
     this.fruits = [];
     this.updateDisplay();
@@ -129,9 +143,12 @@ export default class GameMode {
     }
     if (!this.finished) {
       this.spawnTimer += realDt;
-      if (this.spawnTimer > 1) {
-        this.spawnFruit();
-        this.spawnTimer = 0;
+      if (this.spawnTimer >= 1) {
+        const count = samplePoisson(this.fruitsPerSecond * this.spawnTimer);
+        for (let i = 0; i < count; i++) {
+          this.spawnFruit();
+        }
+        this.spawnTimer -= 1;
       }
     }
     const dt = realDt * this.timeSpeed;
