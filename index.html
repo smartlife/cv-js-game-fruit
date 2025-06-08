@@ -47,8 +47,6 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 15vh;
-      height: 15vh;
       pointer-events: none;
     }
     #game-canvas {
@@ -75,7 +73,7 @@
 </head>
 <body>
   <section id="start-screen" class="screen"><div class="video-container"><video id="intro-video" autoplay muted playsinline></video><canvas id="intro-canvas"></canvas></div>
-    <img id="start-fruit" src="fruit.png" alt="Start">
+    <img id="start-fruit" alt="Start">
   </section>
 
   <section id="game-screen" class="screen"><div class="video-container"><video id="game-video" autoplay muted playsinline></video><canvas id="game-canvas"></canvas></div><div id="hud"><span id="timer"></span><span id="score"></span></div></section>
