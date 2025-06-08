@@ -46,13 +46,31 @@ export default class GameMode {
   }
 
   spawnFruit() {
-    const side = Math.random() < 0.5 ? 'left' : 'right';
-    const x = side === 'left' ? -this.canvas.height * 0.05 : this.canvas.width + this.canvas.height * 0.05;
-    const y = Math.random() * this.canvas.height * 0.5;
-    const vx = side === 'left' ? 200 + Math.random() * 200 : -200 - Math.random() * 200;
-    const vy = -600 - Math.random() * 200;
     const radius = this.canvas.height * 0.05;
-    const fruit = new Fruit('fruit.png', x, y, vx, vy, radius);
+    const side = Math.random() < 0.5 ? 'left' : 'right';
+    const x = side === 'left' ? -radius : this.canvas.width + radius;
+
+    const vxMag = 200 + Math.random() * 200;
+    const vx = side === 'left' ? vxMag : -vxMag;
+
+    // choose peak between 10% and 45% of the screen height
+    const peakMin = this.canvas.height * 0.1;
+    const peakMax = this.canvas.height * 0.45;
+    const highestY = peakMin + Math.random() * (peakMax - peakMin);
+
+    const y = highestY + Math.random() * (this.canvas.height * 0.5 - highestY);
+
+    const g = 800;
+    const vy = -Math.sqrt(2 * g * (y - highestY));
+
+    const distX = this.canvas.width + radius * 2;
+    const tCross = distX / vxMag;
+    const endVy = vy + g * tCross;
+
+    const fruit = new Fruit('fruit.png', x, y, vx, vy, radius, 1, this.canvas.width);
+    fruit.highestY = highestY;
+    fruit.endVy = endVy;
+
     this.fruits.push(fruit);
     debug('Spawn fruit', fruit);
   }

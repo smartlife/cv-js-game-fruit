@@ -1,7 +1,7 @@
 import { DEBUG, debug } from './config.js';
 
 export default class Fruit {
-  constructor(image, x, y, vx, vy, radius, score = 1) {
+  constructor(image, x, y, vx, vy, radius, score = 1, canvasWidth = null) {
     this.image = new Image();
     this.image.src = image;
     this.x = x;
@@ -12,6 +12,17 @@ export default class Fruit {
     this.radius = radius;
     this.score = score;
     this.alive = true;
+    this.highestY = null;
+    this.endVy = null;
+
+    if (canvasWidth !== null) {
+      const tPeak = -this.vy / this.gravity;
+      this.highestY = this.y + this.vy * tPeak + 0.5 * this.gravity * tPeak ** 2;
+      const distX = canvasWidth + this.radius * 2;
+      const tCross = distX / Math.abs(this.vx);
+      this.endVy = this.vy + this.gravity * tCross;
+    }
+
     debug('Fruit created', this);
   }
 
