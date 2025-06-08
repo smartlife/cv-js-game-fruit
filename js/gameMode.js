@@ -45,28 +45,41 @@ export default class GameMode {
   }
 
   spawnFruit() {
+    // Spawn from either side and calculate a parabolic trajectory.
+    // 1) pick a random side and starting height
+    // 2) choose a peak higher than the start
+    // 3) pick a point where the fruit will cross the bottom
+    //    (0.5-1.5 screen widths away) and derive velocities
     const radius = this.canvas.height * 0.05;
     const side = Math.random() < 0.5 ? 'left' : 'right';
     const x = side === 'left' ? -radius : this.canvas.width + radius;
 
-    const vxMag = 200 + Math.random() * 200;
-    const vx = side === 'left' ? vxMag : -vxMag;
+    // parameters controlling spawn randomness
+    const startMin = 0.1;  // 10% of screen height
+    const startMax = 0.9;  // 90% of screen height
+    const peakLimit = 0.95; // 95% of screen height
+    const fallMin = 0.5;   // 50% of screen width
+    const fallMax = 1.5;   // 150% of screen width
 
-    // choose peak between 10% and 45% of the screen height
-    const peakMin = this.canvas.height * 0.1;
-    const peakMax = this.canvas.height * 0.45;
-    const highestY = peakMin + Math.random() * (peakMax - peakMin);
+    const startNorm = startMin + Math.random() * (startMax - startMin);
+    const peakNorm = startNorm + Math.random() * (peakLimit - startNorm);
 
-    const y = highestY + Math.random() * (this.canvas.height * 0.5 - highestY);
+    // convert from bottom-based percentage to canvas coordinates
+    const startY = this.canvas.height * (1 - startNorm);
+    const highestY = this.canvas.height * (1 - peakNorm);
 
     const g = 800;
-    const vy = -Math.sqrt(2 * g * (y - highestY));
+    const vy = -Math.sqrt(2 * g * (startY - highestY));
 
-    const distX = this.canvas.width + radius * 2;
-    const tCross = distX / vxMag;
+    let fallNorm = fallMin + Math.random() * (fallMax - fallMin); // 0.5-1.5
+    if (side === 'right') fallNorm = fallMin - Math.random() * (fallMax - fallMin); // 0.5 to -0.5
+    const fallX = this.canvas.width * fallNorm;
+
+    const tCross = (-vy + Math.sqrt(vy * vy + 2 * g * (this.canvas.height - startY))) / g;
+    const vx = (fallX - x) / tCross;
     const endVy = vy + g * tCross;
 
-    const fruit = new Fruit('fruit.png', x, y, vx, vy, radius, 1, this.canvas.width);
+    const fruit = new Fruit('fruit.png', x, startY, vx, vy, radius, 1, this.canvas.width);
     fruit.highestY = highestY;
     fruit.endVy = endVy;
 
