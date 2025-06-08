@@ -2,9 +2,10 @@ import { FRUITS } from './fruitConfig.js';
 
 export const LEVELS = [
   {
-    speed: 0.2,
+    speed: 0.3,
     fruits: [
-      { type: 'basic', priority: 1 },
+      { type: 'apple', priority: 1 },
+      { type: 'pear', priority: 0.5 },
     ],
   },
 ];
