@@ -1,6 +1,6 @@
 import PoseProcessor from './poseProcessor.js';
 import Fruit from './fruit.js';
-import { DEBUG, debug } from './config.js';
+import { DEBUG, debug, TIME_SPEED } from './config.js';
 
 export default class GameMode {
   constructor(manager) {
@@ -78,20 +78,20 @@ export default class GameMode {
   }
 
   loop = async (timestamp) => {
-    const dt = (timestamp - this.lastTime) / 1000;
+    const realDt = (timestamp - this.lastTime) / 1000;
     this.lastTime = timestamp;
-    this.time -= dt;
+    this.time -= realDt;
     if (this.time <= 0) {
       this.manager.switchTo('start');
       return;
     }
-    this.spawnTimer += dt;
+    this.spawnTimer += realDt;
     if (this.spawnTimer > 1) {
       this.spawnFruit();
       this.spawnTimer = 0;
     }
-
-    const hands = await this.pose.update(dt, false);
+    const dt = realDt * TIME_SPEED;
+    const hands = await this.pose.update(realDt, false);
     this.fruits.forEach(f => f.update(dt));
     this.checkCollisions(hands);
 
