@@ -1,10 +1,12 @@
 import PoseProcessor from './poseProcessor.js';
 import Fruit from './fruit.js';
-import { DEBUG, debug, TIME_SPEED } from './config.js';
+import { DEBUG, debug } from './config.js';
+import { LEVELS, chooseFruit } from './levelConfig.js';
 
 export default class GameMode {
-  constructor(manager) {
+  constructor(manager, level = 0) {
     this.manager = manager;
+    this.level = level;
     this.container = document.getElementById('game-screen');
     this.timerEl = document.getElementById('timer');
     this.scoreEl = document.getElementById('score');
@@ -18,6 +20,7 @@ export default class GameMode {
     this.spawnTimer = 0;
     this.animationId = null;
     this.lastTime = 0;
+    this.timeSpeed = LEVELS[this.level].speed;
     debug('GameMode created');
   }
 
@@ -45,12 +48,13 @@ export default class GameMode {
   }
 
   spawnFruit() {
+    const cfg = chooseFruit(this.level);
     // Spawn from either side and calculate a parabolic trajectory.
     // 1) pick a random side and starting height
     // 2) choose a peak higher than the start
     // 3) pick a point where the fruit will cross the bottom
     //    (0.5-1.5 screen widths away) and derive velocities
-    const radius = this.canvas.height * 0.05;
+    const radius = this.canvas.height * (cfg.size / 2);
     const side = Math.random() < 0.5 ? 'left' : 'right';
     const x = side === 'left' ? -radius : this.canvas.width + radius;
 
@@ -79,7 +83,7 @@ export default class GameMode {
     const vx = (fallX - x) / tCross;
     const endVy = vy + g * tCross;
 
-    const fruit = new Fruit('fruit.png', x, startY, vx, vy, radius, 1, this.canvas.width);
+    const fruit = new Fruit(cfg.image, x, startY, vx, vy, radius, cfg.score, this.canvas.width);
     fruit.highestY = highestY;
     fruit.endVy = endVy;
 
@@ -120,7 +124,7 @@ export default class GameMode {
       this.spawnFruit();
       this.spawnTimer = 0;
     }
-    const dt = realDt * TIME_SPEED;
+    const dt = realDt * this.timeSpeed;
     const hands = await this.pose.update(realDt, false);
     this.fruits.forEach(f => f.update(dt));
     this.checkCollisions(hands);
