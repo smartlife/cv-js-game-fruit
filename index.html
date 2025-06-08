@@ -44,10 +44,18 @@
     }
     #start-fruit {
       position: absolute;
-      top: 50%;
+      bottom: 5vh;
       left: 50%;
-      transform: translate(-50%, -50%);
+      transform: translateX(-50%);
       pointer-events: none;
+    }
+    #start-text {
+      position: absolute;
+      top: 35%;
+      width: 100%;
+      text-align: center;
+      color: #fff;
+      font-size: 5vh;
     }
     #game-canvas {
       position: absolute;
@@ -83,15 +91,21 @@
       padding: 1vh 3vh 1vh 1vh;
       box-sizing: border-box;
       color: #fff;
-      font-size: 2vh;
+      font-size: 4vh;
       display: flex;
       justify-content: space-between;
+    }
+    #hud span {
+      background: rgba(0, 0, 0, 0.5);
+      padding: 0.5vh 1vh;
+      border-radius: 1vh;
     }
   </style>
 
 </head>
 <body>
   <section id="start-screen" class="screen"><div class="video-container"><video id="intro-video" autoplay muted playsinline></video><canvas id="intro-canvas"></canvas></div>
+    <div id="start-text">Slice the fruit by hand to play</div>
     <img id="start-fruit" alt="Start">
   </section>
 

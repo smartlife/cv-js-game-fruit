@@ -48,7 +48,7 @@ export default class GameMode {
   }
 
   updateDisplay() {
-    this.timerEl.textContent = `Time: ${this.time.toFixed(1)}`;
+    this.timerEl.textContent = `Time: ${Math.ceil(this.time)}`;
     this.scoreEl.textContent = `Score: ${this.score}`;
   }
 
