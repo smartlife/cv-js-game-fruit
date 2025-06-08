@@ -1,0 +1,81 @@
+import PoseProcessor from './poseProcessor.js';
+import { FRUITS } from './fruitConfig.js';
+import { LEVELS } from './levelConfig.js';
+import { debug } from './config.js';
+
+export default class LevelCompleteMode {
+  constructor(manager) {
+    this.manager = manager;
+    this.container = document.getElementById('complete-screen');
+    this.video = document.getElementById('complete-video');
+    this.canvas = document.getElementById('complete-canvas');
+    this.levelLabel = document.getElementById('level-finished');
+    this.scoreLabel = document.getElementById('final-score');
+    this.continueFruit = document.getElementById('continue-fruit');
+    this.continueFruit.src = FRUITS.basic.image;
+    const size = `${FRUITS.basic.size * 100}vh`;
+    this.continueFruit.style.width = size;
+    this.continueFruit.style.height = size;
+    this.pose = new PoseProcessor(this.video, this.canvas);
+    this.animationId = null;
+    this.lastTime = 0;
+    debug('LevelCompleteMode created');
+  }
+
+  async enter() {
+    this.container.style.display = 'block';
+    await this.pose.init();
+    const levelNum = this.manager.level + 1;
+    if (this.manager.level >= LEVELS.length - 1) {
+      this.levelLabel.textContent = 'Game Complete';
+    } else {
+      this.levelLabel.textContent = `Level ${levelNum} finished`;
+    }
+    this.scoreLabel.textContent = `Score: ${this.manager.lastScore}`;
+    this.lastTime = performance.now();
+    this.loop(this.lastTime);
+    debug('LevelCompleteMode enter');
+  }
+
+  exit = () => {
+    this.container.style.display = 'none';
+    cancelAnimationFrame(this.animationId);
+    this.pose.stop();
+    debug('LevelCompleteMode exit');
+  };
+
+  handleContinue = () => {
+    if (this.manager.level >= LEVELS.length - 1) {
+      this.manager.level = 0;
+      this.manager.switchTo('start');
+    } else {
+      this.manager.level++;
+      this.manager.switchTo('game');
+    }
+  };
+
+  loop = async (timestamp) => {
+    const dt = (timestamp - this.lastTime) / 1000;
+    this.lastTime = timestamp;
+    const hands = await this.pose.update(dt);
+    this.checkCut(hands);
+    if (this.manager.current === 'complete') {
+      this.animationId = requestAnimationFrame(this.loop);
+    }
+  };
+
+  checkCut(hands) {
+    if (!hands) return;
+    const rect = this.continueFruit.getBoundingClientRect();
+    const canvasRect = this.canvas.getBoundingClientRect();
+    ['left', 'right'].forEach(side => {
+      const h = hands[side];
+      if (!h) return;
+      const x = canvasRect.left + (h.x / this.canvas.width) * canvasRect.width;
+      const y = canvasRect.top + (h.y / this.canvas.height) * canvasRect.height;
+      if (h.active && x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+        this.handleContinue();
+      }
+    });
+  }
+}

@@ -56,6 +56,25 @@
       width: 100%;
       height: 100%;
     }
+    #complete-text {
+      position: absolute;
+      top: 35%;
+      width: 100%;
+      text-align: center;
+      color: #fff;
+      font-size: 5vh;
+    }
+    #final-score {
+      font-size: 8vh;
+      margin-top: 2vh;
+    }
+    #continue-fruit {
+      position: absolute;
+      bottom: 5vh;
+      left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
     #hud {
       position: absolute;
       top: 0;
@@ -78,6 +97,18 @@
 
   <section id="game-screen" class="screen"><div class="video-container"><video id="game-video" autoplay muted playsinline></video><canvas id="game-canvas"></canvas></div><div id="hud"><span id="timer"></span><span id="score"></span></div></section>
 
+  <section id="complete-screen" class="screen">
+    <div class="video-container">
+      <video id="complete-video" autoplay muted playsinline></video>
+      <canvas id="complete-canvas"></canvas>
+    </div>
+    <div id="complete-text">
+      <div id="level-finished"></div>
+      <div id="final-score"></div>
+    </div>
+    <img id="continue-fruit" alt="Continue">
+  </section>
+
   <!-- External libraries for pose detection -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
@@ -88,13 +119,16 @@
     import ModeManager from './js/modeManager.js';
     import StartMode from './js/startMode.js';
     import GameMode from './js/gameMode.js';
+    import LevelCompleteMode from './js/levelCompleteMode.js';
 
     const manager = new ModeManager();
     const start = new StartMode(manager);
     const game = new GameMode(manager);
+    const complete = new LevelCompleteMode(manager);
 
     manager.register('start', start);
     manager.register('game', game);
+    manager.register('complete', complete);
 
     manager.switchTo('start');
   </script>

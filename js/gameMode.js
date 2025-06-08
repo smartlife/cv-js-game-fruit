@@ -4,9 +4,9 @@ import { DEBUG, debug } from './config.js';
 import { LEVELS, chooseFruit } from './levelConfig.js';
 
 export default class GameMode {
-  constructor(manager, level = 0) {
+  constructor(manager) {
     this.manager = manager;
-    this.level = level;
+    this.level = 0;
     this.container = document.getElementById('game-screen');
     this.timerEl = document.getElementById('timer');
     this.scoreEl = document.getElementById('score');
@@ -20,13 +20,17 @@ export default class GameMode {
     this.spawnTimer = 0;
     this.animationId = null;
     this.lastTime = 0;
-    this.timeSpeed = LEVELS[this.level].speed;
+    this.timeSpeed = 1;
     debug('GameMode created');
   }
 
   async enter() {
     this.container.style.display = 'block';
     await this.pose.init();
+    this.level = this.manager.level;
+    this.timeSpeed = LEVELS[this.level].speed;
+    this.finished = false;
+    this.timerEl.style.visibility = 'visible';
     this.time = 60;
     this.score = 0;
     this.fruits = [];
@@ -39,6 +43,7 @@ export default class GameMode {
   exit() {
     this.container.style.display = 'none';
     cancelAnimationFrame(this.animationId);
+    this.pose.stop();
     debug('GameMode exit');
   }
 
@@ -114,15 +119,20 @@ export default class GameMode {
   loop = async (timestamp) => {
     const realDt = (timestamp - this.lastTime) / 1000;
     this.lastTime = timestamp;
-    this.time -= realDt;
-    if (this.time <= 0) {
-      this.manager.switchTo('start');
-      return;
+    if (!this.finished) {
+      this.time -= realDt;
+      if (this.time <= 0) {
+        this.time = 0;
+        this.finished = true;
+        this.timerEl.style.visibility = 'hidden';
+      }
     }
-    this.spawnTimer += realDt;
-    if (this.spawnTimer > 1) {
-      this.spawnFruit();
-      this.spawnTimer = 0;
+    if (!this.finished) {
+      this.spawnTimer += realDt;
+      if (this.spawnTimer > 1) {
+        this.spawnFruit();
+        this.spawnTimer = 0;
+      }
     }
     const dt = realDt * this.timeSpeed;
     const hands = await this.pose.update(realDt, false);
@@ -134,6 +144,13 @@ export default class GameMode {
     this.pose.drawPalms(hands);
 
     this.updateDisplay();
+
+    if (this.finished && this.fruits.length === 0) {
+      this.manager.lastScore = this.score;
+      this.manager.switchTo('complete');
+      return;
+    }
+
     this.animationId = requestAnimationFrame(this.loop);
   };
 }
