@@ -7,8 +7,8 @@ This repository now contains the initial structure of a pose‑controlled fruit 
 ## Overview
 
 - **index.html** – loads external pose detection libraries and switches between different game modes.
-- **js/poseProcessor.js** – wrapper around pose detection library. Initializes the webcam stream and pose detector once and draws highlighted palms with speed information.
-- **js/config.js** – global configuration with a `DEBUG` flag and `USE_STUB` to simulate movement without a webcam.
+- **js/poseProcessor.js** – wrapper around pose detection library. Initializes the webcam stream and pose detector once and draws highlighted palms.
+- **js/config.js** – global configuration with a `DEBUG` flag, `USE_STUB` to simulate movement without a webcam and `ACTIVE_SPEED_FRACTION` controlling how fast a hand must move to become active.
 - **js/fruitConfig.js** – list of available fruits with image, score and size information.
 - **js/levelConfig.js** – game levels defining speed and prioritized fruit choices.
 - **js/modeManager.js** – simple controller used to register and switch between modes.
