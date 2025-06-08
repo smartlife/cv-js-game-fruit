@@ -1,15 +1,15 @@
-import { DEBUG } from './config.js';
+import { DEBUG, debug } from './config.js';
 
 export default class ModeManager {
   constructor() {
     this.modes = {};
     this.current = null;
-    if (DEBUG) console.log('ModeManager created');
+    debug('ModeManager created');
   }
 
   register(name, mode) {
     this.modes[name] = mode;
-    if (DEBUG) console.log('Mode registered', name);
+    debug('Mode registered', name);
   }
 
   async switchTo(name) {
@@ -20,6 +20,6 @@ export default class ModeManager {
     if (this.modes[name]) {
       await this.modes[name].enter();
     }
-    if (DEBUG) console.log('Switched to', name);
+    debug('Switched to', name);
   }
 }

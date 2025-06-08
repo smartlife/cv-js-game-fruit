@@ -1,5 +1,5 @@
 import PoseProcessor from './poseProcessor.js';
-import { DEBUG } from './config.js';
+import { DEBUG, debug } from './config.js';
 
 export default class StartMode {
   constructor(manager) {
@@ -11,7 +11,7 @@ export default class StartMode {
     this.pose = new PoseProcessor(this.video, this.canvas);
     this.animationId = null;
     this.lastTime = 0;
-    if (DEBUG) console.log('StartMode created');
+    debug('StartMode created');
   }
 
   async enter() {
@@ -19,17 +19,18 @@ export default class StartMode {
     await this.pose.init();
     this.lastTime = performance.now();
     this.loop(this.lastTime);
-    if (DEBUG) console.log('StartMode enter');
+    debug('StartMode enter');
   }
 
   exit = () => {
     this.container.style.display = 'none';
     cancelAnimationFrame(this.animationId);
-    if (DEBUG) console.log('StartMode exit');
+    this.pose.stop();
+    debug('StartMode exit');
   };
 
   startGame = () => {
-    if (DEBUG) console.log('Switching to game');
+    debug('Switching to game');
     this.manager.switchTo('game');
   };
 
@@ -39,7 +40,6 @@ export default class StartMode {
     const hands = await this.pose.update(dt);
     this.checkStartCut(hands);
     this.animationId = requestAnimationFrame(this.loop);
-    if (DEBUG) console.log('StartMode loop', dt);
   };
 
   checkStartCut(hands) {
@@ -55,6 +55,5 @@ export default class StartMode {
         this.startGame();
       }
     });
-    if (DEBUG) console.log('Check start cut');
   }
 }

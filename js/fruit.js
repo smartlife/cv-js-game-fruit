@@ -1,4 +1,4 @@
-import { DEBUG } from './config.js';
+import { DEBUG, debug } from './config.js';
 
 export default class Fruit {
   constructor(image, x, y, vx, vy, radius, score = 1) {
@@ -12,26 +12,20 @@ export default class Fruit {
     this.radius = radius;
     this.score = score;
     this.alive = true;
-    if (DEBUG) {
-      console.log('Fruit created', this);
-    }
+    debug('Fruit created', this);
   }
 
   update(dt) {
     this.vy += this.gravity * dt;
     this.x += this.vx * dt;
     this.y += this.vy * dt;
-    if (DEBUG) {
-      console.log('Fruit update', this.x, this.y);
-    }
+    // per-frame logs removed to avoid spam
   }
 
   draw(ctx) {
     if (!this.image.complete) return;
     ctx.drawImage(this.image, this.x - this.radius, this.y - this.radius,
       this.radius * 2, this.radius * 2);
-    if (DEBUG) {
-      console.log('Fruit draw', this.x, this.y);
-    }
+    // per-frame logs removed to avoid spam
   }
 }
