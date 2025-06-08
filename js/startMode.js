@@ -1,5 +1,5 @@
 import PoseProcessor from './poseProcessor.js';
-import { DEBUG, debug, TIME_SPEED } from './config.js';
+import { DEBUG, debug } from './config.js';
 
 export default class StartMode {
   constructor(manager) {
