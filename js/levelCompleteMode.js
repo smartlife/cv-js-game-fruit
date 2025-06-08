@@ -19,6 +19,8 @@ export default class LevelCompleteMode {
     this.pose = new PoseProcessor(this.video, this.canvas);
     this.animationId = null;
     this.lastTime = 0;
+    this.buttonReady = false;
+    this.showTimeout = null;
     debug('LevelCompleteMode created');
   }
 
@@ -32,6 +34,12 @@ export default class LevelCompleteMode {
       this.levelLabel.textContent = `Level ${levelNum} finished`;
     }
     this.scoreLabel.textContent = `Score: ${this.manager.lastScore}`;
+    this.continueFruit.style.visibility = 'hidden';
+    this.buttonReady = false;
+    this.showTimeout = setTimeout(() => {
+      this.continueFruit.style.visibility = 'visible';
+      this.buttonReady = true;
+    }, 1000);
     this.lastTime = performance.now();
     this.loop(this.lastTime);
     debug('LevelCompleteMode enter');
@@ -40,6 +48,7 @@ export default class LevelCompleteMode {
   exit = () => {
     this.container.style.display = 'none';
     cancelAnimationFrame(this.animationId);
+    clearTimeout(this.showTimeout);
     this.pose.stop();
     debug('LevelCompleteMode exit');
   };
@@ -65,7 +74,7 @@ export default class LevelCompleteMode {
   };
 
   checkCut(hands) {
-    if (!hands) return;
+    if (!this.buttonReady || !hands) return;
     const rect = this.continueFruit.getBoundingClientRect();
     const canvasRect = this.canvas.getBoundingClientRect();
     ['left', 'right'].forEach(side => {
