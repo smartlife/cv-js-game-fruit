@@ -10,6 +10,8 @@ export default class Fruit {
     this.image.src = image;
     this.x = x;
     this.y = y;
+    this.prevX = x;
+    this.prevY = y;
     this.vx = vx;
     this.vy = vy;
     this.gravity = 800; // px per second^2
@@ -35,6 +37,8 @@ export default class Fruit {
   }
 
   update(dt) {
+    this.prevX = this.x;
+    this.prevY = this.y;
     this.vy += this.gravity * dt;
     this.x += this.vx * dt;
     this.y += this.vy * dt;

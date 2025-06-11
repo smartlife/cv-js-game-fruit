@@ -2,6 +2,7 @@ import PoseProcessor from './poseProcessor.js';
 import Fruit from './fruit.js';
 import { DEBUG, debug } from './config.js';
 import { LEVELS, chooseFruit } from './levelConfig.js';
+import { segmentsClose } from './geometry.js';
 
 function samplePoisson(lambda) {
   const L = Math.exp(-lambda);
@@ -111,15 +112,18 @@ export default class GameMode {
   }
 
   checkCollisions(hands) {
+    const palmR = this.canvas.height * 0.03;
     this.fruits.forEach(f => {
       if (!f.alive) return;
       ['left', 'right'].forEach(side => {
         const h = hands[side];
         if (!h || !h.active) return;
-        const dx = h.x - f.x;
-        const dy = h.y - f.y;
-        const dist = Math.hypot(dx, dy);
-        if (dist < f.radius + 20) {
+        const p1 = { x: h.prevX, y: h.prevY };
+        const p2 = { x: h.x, y: h.y };
+        const f1 = { x: f.prevX, y: f.prevY };
+        const f2 = { x: f.x, y: f.y };
+        const radius = f.radius + palmR;
+        if (segmentsClose(p1, p2, f1, f2, radius)) {
           f.alive = false;
           this.score += f.score;
           debug('Fruit cut', f);
