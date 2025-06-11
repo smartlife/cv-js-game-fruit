@@ -66,15 +66,28 @@ export default class PoseProcessor {
 
   drawPalms(hands) {
     if (!hands) return;
+    const r = this.canvas.height * 0.03;
     ['left', 'right'].forEach(side => {
       const h = hands[side];
       if (!h) return;
-      const r = this.canvas.height * 0.03;
-      this.ctx.fillStyle = h.active ? 'rgba(255,0,0,0.7)' : 'rgba(255,255,255,0.7)';
+      const color = h.active ? 'rgba(255,0,0,0.7)' : 'rgba(255,255,255,0.7)';
+      // draw previous position
+      this.ctx.fillStyle = color;
+      this.ctx.beginPath();
+      this.ctx.arc(h.prevX, h.prevY, r, 0, Math.PI * 2);
+      this.ctx.fill();
+      // draw connecting segment
+      this.ctx.strokeStyle = color;
+      this.ctx.lineWidth = r * 2;
+      this.ctx.lineCap = 'round';
+      this.ctx.beginPath();
+      this.ctx.moveTo(h.prevX, h.prevY);
+      this.ctx.lineTo(h.x, h.y);
+      this.ctx.stroke();
+      // draw current position
       this.ctx.beginPath();
       this.ctx.arc(h.x, h.y, r, 0, Math.PI * 2);
       this.ctx.fill();
-      // Palm speed is no longer displayed
     });
   }
 
@@ -112,20 +125,22 @@ export default class PoseProcessor {
 
     const hands = { left: null, right: null };
     if (left) {
+      const prev = this.prevLeft || left;
       const v = this.prevLeft && dt > 0 ? {
         vx: (left.x - this.prevLeft.x) / dt,
         vy: (left.y - this.prevLeft.y) / dt
       } : { vx: 0, vy: 0 };
       const speed = Math.hypot(v.vx, v.vy);
-      hands.left = { ...left, ...v, speed, active: speed > threshold };
+      hands.left = { ...left, ...v, speed, active: speed > threshold, prevX: prev.x, prevY: prev.y };
     }
     if (right) {
+      const prev = this.prevRight || right;
       const v = this.prevRight && dt > 0 ? {
         vx: (right.x - this.prevRight.x) / dt,
         vy: (right.y - this.prevRight.y) / dt
       } : { vx: 0, vy: 0 };
       const speed = Math.hypot(v.vx, v.vy);
-      hands.right = { ...right, ...v, speed, active: speed > threshold };
+      hands.right = { ...right, ...v, speed, active: speed > threshold, prevX: prev.x, prevY: prev.y };
     }
 
     this.prevLeft = left;
