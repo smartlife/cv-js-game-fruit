@@ -39,7 +39,7 @@ export default class LevelCompleteMode {
     this.showTimeout = setTimeout(() => {
       this.continueFruit.style.visibility = 'visible';
       this.buttonReady = true;
-    }, 1000);
+    }, 2000);
     this.lastTime = performance.now();
     this.loop(this.lastTime);
     debug('LevelCompleteMode enter');
