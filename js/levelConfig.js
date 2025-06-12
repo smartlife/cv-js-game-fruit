@@ -26,12 +26,12 @@ export const LEVELS = [
 
   {
     time: 50,
-    fruitsPerSecond: 1.6,
+    fruitsPerSecond: 1.8,
     speed: 0.7,
     fruits: [
-      { type: 'pineapple', priority: 1 },
+      { type: 'pineapple', priority: 0.1 },
       { type: 'pear', priority: 2 },
-      { type: 'apple', priority: 2 },
+      { type: 'apple', priority: 3 },
       { type: 'mandarine', priority: 0.5 },
     ],
   },
@@ -71,6 +71,18 @@ export const LEVELS = [
       { type: 'mandarine', priority: 20 },
     ],
   },  
+  
+  {
+    time: 15,
+    fruitsPerSecond: 13.8,
+    speed: 1.,
+    fruits: [
+      { type: 'pineapple', priority: 4 },
+      { type: 'pear', priority: 3 },
+      { type: 'apple', priority: 2 },
+      { type: 'mandarine', priority: 1 },
+    ],
+  },   
 ];
 
 // utility to pick a fruit based on priorities
