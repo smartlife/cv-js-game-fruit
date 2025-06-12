@@ -5,7 +5,11 @@ const ROTATION_SPEED_MIN = 0.03;
 const ROTATION_SPEED_MAX = 0.15;
 
 export default class Fruit {
-  constructor(image, x, y, vx, vy, radius, score = 1, canvasWidth = null) {
+  // Fruit represents a falling object drawn with its original aspect ratio.
+  // `width` and `height` are the display dimensions of the image. A
+  // `boundingRadius` is derived from the larger dimension for simplified
+  // collision checks and spawn offset.
+  constructor(image, x, y, vx, vy, width, height, score = 1, canvasWidth = null) {
     this.image = new Image();
     this.image.src = image;
     this.x = x;
@@ -15,7 +19,9 @@ export default class Fruit {
     this.vx = vx;
     this.vy = vy;
     this.gravity = 800; // px per second^2
-    this.radius = radius;
+    this.width = width;
+    this.height = height;
+    this.boundingRadius = Math.max(width, height) / 2;
     this.score = score;
     this.alive = true;
     this.highestY = null;
@@ -28,7 +34,7 @@ export default class Fruit {
     if (canvasWidth !== null) {
       const tPeak = -this.vy / this.gravity;
       this.highestY = this.y + this.vy * tPeak + 0.5 * this.gravity * tPeak ** 2;
-      const distX = canvasWidth + this.radius * 2;
+      const distX = canvasWidth + this.boundingRadius * 2;
       const tCross = distX / Math.abs(this.vx);
       this.endVy = this.vy + this.gravity * tCross;
     }
@@ -51,8 +57,8 @@ export default class Fruit {
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.angle);
-    ctx.drawImage(this.image, -this.radius, -this.radius,
-      this.radius * 2, this.radius * 2);
+    ctx.drawImage(this.image, -this.width / 2, -this.height / 2,
+      this.width, this.height);
     ctx.restore();
     // per-frame logs removed to avoid spam
   }

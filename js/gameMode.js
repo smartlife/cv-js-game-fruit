@@ -74,7 +74,11 @@ export default class GameMode {
     // 2) choose a peak higher than the start
     // 3) pick a point where the fruit will cross the bottom
     //    (0.5-1.5 screen widths away) and derive velocities
-    const radius = this.canvas.height * (cfg.size / 2);
+    // Each fruit's display height is a fraction of the screen and the width
+    // is scaled by its aspect ratio so images are not distorted.
+    const height = this.canvas.height * cfg.size;
+    const width = height * cfg.aspect;
+    const radius = Math.max(width, height) / 2; // used as bounding circle
     const side = Math.random() < 0.5 ? 'left' : 'right';
     const x = side === 'left' ? -radius : this.canvas.width + radius;
 
@@ -103,7 +107,7 @@ export default class GameMode {
     const vx = (fallX - x) / tCross;
     const endVy = vy + g * tCross;
 
-    const fruit = new Fruit(cfg.image, x, startY, vx, vy, radius, cfg.score, this.canvas.width);
+    const fruit = new Fruit(cfg.image, x, startY, vx, vy, width, height, cfg.score, this.canvas.width);
     fruit.highestY = highestY;
     fruit.endVy = endVy;
 
@@ -122,7 +126,7 @@ export default class GameMode {
         const p2 = { x: h.x, y: h.y };
         const f1 = { x: f.prevX, y: f.prevY };
         const f2 = { x: f.x, y: f.y };
-        const radius = f.radius + palmR;
+        const radius = f.boundingRadius + palmR;
         if (segmentsClose(p1, p2, f1, f2, radius)) {
           f.alive = false;
           this.score += f.score;
