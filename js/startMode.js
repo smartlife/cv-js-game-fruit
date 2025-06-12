@@ -10,11 +10,13 @@ export default class StartMode {
     this.video = document.getElementById('intro-video');
     this.canvas = document.getElementById('intro-canvas');
     this.startFruit = document.getElementById('start-fruit');
-    // Use the image and configured size of the basic fruit for the start button
+    // Use the image and configured size of the basic fruit for the start button.
+    // Height is specified relative to the viewport and the width keeps the
+    // image's aspect ratio so the fruit is not stretched.
     this.startFruit.src = FRUITS.basic.image;
-    const size = `${FRUITS.basic.size * 100}vh`;
-    this.startFruit.style.width = size;
-    this.startFruit.style.height = size;
+    const h = FRUITS.basic.size * 100;
+    this.startFruit.style.height = `${h}vh`;
+    this.startFruit.style.width = `${h * FRUITS.basic.aspect}vh`;
     this.pose = new PoseProcessor(this.video, this.canvas);
     this.animationId = null;
     this.lastTime = 0;

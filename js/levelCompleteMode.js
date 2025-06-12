@@ -13,10 +13,12 @@ export default class LevelCompleteMode {
     this.levelLabel = document.getElementById('level-finished');
     this.scoreLabel = document.getElementById('final-score');
     this.continueFruit = document.getElementById('continue-fruit');
+    // Continue button uses the basic fruit image. Size is based on viewport
+    // height and width respects the image's aspect ratio so it appears natural.
     this.continueFruit.src = FRUITS.basic.image;
-    const size = `${FRUITS.basic.size * 100}vh`;
-    this.continueFruit.style.width = size;
-    this.continueFruit.style.height = size;
+    const h = FRUITS.basic.size * 100;
+    this.continueFruit.style.height = `${h}vh`;
+    this.continueFruit.style.width = `${h * FRUITS.basic.aspect}vh`;
     this.pose = new PoseProcessor(this.video, this.canvas);
     this.animationId = null;
     this.lastTime = 0;
