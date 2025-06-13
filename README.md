@@ -9,16 +9,16 @@ This repository now contains the initial structure of a pose‑controlled fruit 
 - **index.html** – loads external pose detection libraries and switches between different game modes.
 - **js/poseProcessor.js** – wrapper around pose detection library. Initializes the webcam stream and pose detector once and draws highlighted palms.
 - **js/config.js** – global configuration with a `DEBUG` flag, `USE_STUB` to simulate movement without a webcam and `ACTIVE_SPEED_FRACTION` controlling how fast a hand must move to become active.
-- **js/fruitConfig.js** – list of available fruits with image, score, size and
-  aspect ratio information.
+- **js/fruitConfig.js** – list of available fruits with image and size. Each
+  fruit's aspect ratio is measured when the image loads.
 - **js/levelConfig.js** – game levels defining speed, duration, spawn rate and prioritized fruit choices.
 - **js/modeManager.js** – simple controller used to register and switch between modes.
 - **js/startMode.js** – displays the intro screen with live webcam feed. Cutting the start button with a fast hand movement begins the game.
 - **js/fruit.js** – small physics object representing a falling fruit.
 - **js/gameMode.js** – real‑time game loop that updates the timer, fruits and palm positions every frame.
 - **img/** – folder with fruit images. The `basic` entry in `js/fruitConfig.js`
-  provides the image used for the start button. Each fruit definition includes an
-  aspect ratio so images are drawn without distortion.
+  provides the image used for the start button. Fruit images are loaded once at
+  startup to determine their aspect ratios so visuals render without distortion.
 
 The code is written in small modules so that additional modes (for example a score screen or settings) can be added later by registering new mode classes with `ModeManager`.
 

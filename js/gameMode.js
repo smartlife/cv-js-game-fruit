@@ -2,6 +2,7 @@ import PoseProcessor from './poseProcessor.js';
 import Fruit from './fruit.js';
 import { DEBUG, debug } from './config.js';
 import { LEVELS, chooseFruit } from './levelConfig.js';
+import { loadFruitAspects } from './fruitConfig.js';
 import { segmentsClose } from './geometry.js';
 
 function samplePoisson(lambda) {
@@ -37,9 +38,11 @@ export default class GameMode {
     debug('GameMode created');
   }
 
+  // Enter prepares the webcam and loads fruit images so spawn calculations
+  // can use the correct aspect ratios for each fruit.
   async enter() {
     this.container.style.display = 'block';
-    await this.pose.init();
+    await Promise.all([this.pose.init(), loadFruitAspects()]);
     this.level = this.manager.level;
     const levelCfg = LEVELS[this.level];
     this.timeSpeed = levelCfg.speed;
@@ -75,7 +78,8 @@ export default class GameMode {
     // 3) pick a point where the fruit will cross the bottom
     //    (0.5-1.5 screen widths away) and derive velocities
     // Each fruit's display height is a fraction of the screen and the width
-    // is scaled by its aspect ratio so images are not distorted.
+    // is scaled by the aspect ratio measured from the loaded image so it
+    // appears without distortion.
     const height = this.canvas.height * cfg.size;
     const width = height * cfg.aspect;
     const radius = Math.max(width, height) / 2; // used as bounding circle

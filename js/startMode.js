@@ -1,6 +1,6 @@
 import PoseProcessor from './poseProcessor.js';
 import { DEBUG, debug } from './config.js';
-import { FRUITS } from './fruitConfig.js';
+import { FRUITS, loadFruitAspects } from './fruitConfig.js';
 import { segmentRectIntersect } from './geometry.js';
 
 export default class StartMode {
@@ -10,22 +10,23 @@ export default class StartMode {
     this.video = document.getElementById('intro-video');
     this.canvas = document.getElementById('intro-canvas');
     this.startFruit = document.getElementById('start-fruit');
-    // Use the image and configured size of the basic fruit for the start button.
-    // Height is specified relative to the viewport and the width keeps the
-    // image's aspect ratio so the fruit is not stretched.
+    // Use the image of the basic fruit for the start button. Dimensions are set
+    // once the fruit images have loaded and their aspect ratios are known.
     this.startFruit.src = FRUITS.basic.image;
-    const h = FRUITS.basic.size * 100;
-    this.startFruit.style.height = `${h}vh`;
-    this.startFruit.style.width = `${h * FRUITS.basic.aspect}vh`;
     this.pose = new PoseProcessor(this.video, this.canvas);
     this.animationId = null;
     this.lastTime = 0;
     debug('StartMode created');
   }
 
+  // Enter initializes the webcam and ensures fruit images are loaded so
+  // the start button can scale correctly using the fruit's aspect ratio.
   async enter() {
     this.container.style.display = 'block';
-    await this.pose.init();
+    await Promise.all([this.pose.init(), loadFruitAspects()]);
+    const h = FRUITS.basic.size * 100;
+    this.startFruit.style.height = `${h}vh`;
+    this.startFruit.style.width = `${h * FRUITS.basic.aspect}vh`;
     this.lastTime = performance.now();
     this.loop(this.lastTime);
     debug('StartMode enter');

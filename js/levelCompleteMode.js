@@ -1,5 +1,5 @@
 import PoseProcessor from './poseProcessor.js';
-import { FRUITS } from './fruitConfig.js';
+import { FRUITS, loadFruitAspects } from './fruitConfig.js';
 import { LEVELS } from './levelConfig.js';
 import { debug } from './config.js';
 import { segmentRectIntersect } from './geometry.js';
@@ -13,12 +13,9 @@ export default class LevelCompleteMode {
     this.levelLabel = document.getElementById('level-finished');
     this.scoreLabel = document.getElementById('final-score');
     this.continueFruit = document.getElementById('continue-fruit');
-    // Continue button uses the basic fruit image. Size is based on viewport
-    // height and width respects the image's aspect ratio so it appears natural.
+    // Continue button uses the basic fruit image. Dimensions are set once
+    // fruit images load so the aspect ratio remains natural.
     this.continueFruit.src = FRUITS.basic.image;
-    const h = FRUITS.basic.size * 100;
-    this.continueFruit.style.height = `${h}vh`;
-    this.continueFruit.style.width = `${h * FRUITS.basic.aspect}vh`;
     this.pose = new PoseProcessor(this.video, this.canvas);
     this.animationId = null;
     this.lastTime = 0;
@@ -27,9 +24,14 @@ export default class LevelCompleteMode {
     debug('LevelCompleteMode created');
   }
 
+  // Enter waits for fruit images so the continue button can scale
+  // to the correct aspect ratio before appearing.
   async enter() {
     this.container.style.display = 'block';
-    await this.pose.init();
+    await Promise.all([this.pose.init(), loadFruitAspects()]);
+    const h = FRUITS.basic.size * 100;
+    this.continueFruit.style.height = `${h}vh`;
+    this.continueFruit.style.width = `${h * FRUITS.basic.aspect}vh`;
     const levelNum = this.manager.level + 1;
     if (this.manager.level >= LEVELS.length - 1) {
       this.levelLabel.textContent = 'Game Complete';
