@@ -29,4 +29,16 @@ export const FRUITS = {
     size: 0.08, // fraction of screen height
     aspect: 1.111,
   },
+  blueberry: {
+    image: 'img/blueberry.png',
+    score: 10,
+    size: 0.05, // fraction of screen height
+    aspect: 1.,
+  },
+  robot: {
+    image: 'img/robot.png',
+    score: -10,
+    size: 0.25, // fraction of screen height
+    aspect: 1.,
+  },
 };
