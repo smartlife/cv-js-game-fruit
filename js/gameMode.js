@@ -160,7 +160,7 @@ export default class GameMode {
       }
     }
     const dt = realDt * this.timeSpeed;
-    const hands = await this.pose.update(realDt, false);
+    const hands = await this.pose.update(realDt, false, false);
     this.fruits.forEach(f => f.update(dt));
     this.checkCollisions(hands);
 
