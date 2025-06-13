@@ -3,9 +3,11 @@ import { DEBUG, USE_STUB, MIN_KP_SCORE, ACTIVE_SPEED_FRACTION, AUTO_ZOOM,
 
 // PoseProcessor wraps the pose detection library. It keeps webcam and detector
 // instances shared across game screens. When AUTO_ZOOM is enabled the class also
-// maintains a crop rectangle describing the zoomed-in region of the video. The
-// crop is updated on the start screen and reused for the rest of the session so
-// all game coordinates operate on the zoomed view.
+// maintains a crop rectangle describing the zoomed-in region of the video.
+// Cropping is always centered horizontally and only shifts vertically to keep
+// eyes near the top and hands within view. The crop is set on the start screen
+// and reused for the rest of the session so game coordinates are already in the
+// zoomed space.
 export default class PoseProcessor {
   static stream = null;       // shared webcam MediaStream
   static detector = null;     // shared pose detection model
@@ -66,20 +68,21 @@ export default class PoseProcessor {
   }
 
   /**
-   * Apply the current crop rectangle to the video and canvas elements
-   * by translating and scaling so the cropped region fills the view.
+   * Apply the current crop rectangle to the video and canvas elements.
+   * The crop is always centered horizontally; only the vertical offset
+   * and zoom level change. The transformation is applied via CSS so the
+   * video stays in the same on-screen frame without revealing blank areas.
    */
   applyCropStyle() {
     const h = this.video.videoHeight;
     if (!h || !this.crop.height) return;
-    const cropW = this.crop.height * 4 / 3;
-    const offsetX = (this.video.videoWidth - cropW) / 2;
     const s = h / this.crop.height;
-    const tx = -offsetX;
+    const cropW = this.crop.height * 4 / 3;
+    const tx = -(this.canvas.width - cropW) / 2;
     const ty = -this.crop.y;
 
-    const vidTrans = `scaleX(-1) scale(${s}) translate(${tx}px, ${ty}px)`;
-    const canvasTrans = `scale(${s}) translate(${tx}px, ${ty}px)`;
+    const vidTrans = `scaleX(-1) translate(${tx}px, ${ty}px) scale(${s})`;
+    const canvasTrans = `translate(${tx}px, ${ty}px) scale(${s})`;
 
     this.video.style.transformOrigin = 'top left';
     this.canvas.style.transformOrigin = 'top left';
@@ -187,7 +190,8 @@ export default class PoseProcessor {
       if (pose) {
         const cropH = this.crop.height || this.video.videoHeight;
         const cropW = cropH * 4 / 3;
-        const offX = (this.video.videoWidth - cropW) / 2;
+        const baseOffX = (this.video.videoWidth - this.canvas.width) / 2;
+        const offX = baseOffX + (this.canvas.width - cropW) / 2;
         const offY = this.crop.y;
         const scaleX = this.canvas.width / cropW;
         const scaleY = this.canvas.height / cropH;
