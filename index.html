@@ -106,6 +106,7 @@
       left: 50%;
       transform: translateX(-50%);
       display: none;
+      flex-direction: column;
       align-items: center;
       gap: 2vh;
       color: #fff;
@@ -119,6 +120,22 @@
     }
     #new-fruit-box img {
       pointer-events: none;
+    }
+    #new-fruit-title {
+      font-size: 4vh;
+      pointer-events: none;
+    }
+    #continue-text {
+      position: absolute;
+      top: 10%;
+      width: 100%;
+      text-align: center;
+      color: #fff;
+      font-size: 5vh;
+      background: rgba(0, 64, 0, 0.6);
+      padding: 1vh;
+      box-sizing: border-box;
+      visibility: hidden;
     }
     #hud {
       position: absolute;
@@ -158,8 +175,10 @@
       <div id="level-finished"></div>
       <div id="final-score"></div>
     </div>
+    <div id="continue-text">Slice the fruit to continue</div>
     <img id="continue-fruit" alt="Continue">
     <div id="new-fruit-box">
+      <div id="new-fruit-title">New fruit</div>
       <img id="new-fruit-img" alt="New">
       <span id="new-fruit-score"></span>
     </div>

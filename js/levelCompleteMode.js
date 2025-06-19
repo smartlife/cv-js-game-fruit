@@ -13,6 +13,7 @@ export default class LevelCompleteMode {
     this.levelLabel = document.getElementById('level-finished');
     this.scoreLabel = document.getElementById('final-score');
     this.continueFruit = document.getElementById('continue-fruit');
+    this.continueText = document.getElementById('continue-text');
     this.newFruitBox = document.getElementById('new-fruit-box');
     this.newFruitImg = document.getElementById('new-fruit-img');
     this.newFruitScore = document.getElementById('new-fruit-score');
@@ -43,7 +44,9 @@ export default class LevelCompleteMode {
   }
 
   // Enter waits for fruit images so the continue button can scale
-  // to the correct aspect ratio before appearing.
+  // to the correct aspect ratio before appearing. It also prepares the
+  // "new fruit" preview and hides the continue prompt until the player
+  // is allowed to proceed.
   async enter() {
     this.container.style.display = 'block';
     await Promise.all([this.pose.init(), loadFruitAspects()]);
@@ -70,9 +73,11 @@ export default class LevelCompleteMode {
     }
     this.scoreLabel.textContent = `Score: ${this.manager.lastScore}`;
     this.continueFruit.style.visibility = 'hidden';
+    this.continueText.style.visibility = 'hidden';
     this.buttonReady = false;
     this.showTimeout = setTimeout(() => {
       this.continueFruit.style.visibility = 'visible';
+      this.continueText.style.visibility = 'visible';
       this.buttonReady = true;
     }, 2000);
     this.lastTime = performance.now();
@@ -85,6 +90,7 @@ export default class LevelCompleteMode {
     cancelAnimationFrame(this.animationId);
     clearTimeout(this.showTimeout);
     this.newFruitBox.style.display = 'none';
+    this.continueText.style.visibility = 'hidden';
     this.pose.stop();
     debug('LevelCompleteMode exit');
   };
