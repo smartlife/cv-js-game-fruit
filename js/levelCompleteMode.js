@@ -13,6 +13,9 @@ export default class LevelCompleteMode {
     this.levelLabel = document.getElementById('level-finished');
     this.scoreLabel = document.getElementById('final-score');
     this.continueFruit = document.getElementById('continue-fruit');
+    this.newFruitBox = document.getElementById('new-fruit-box');
+    this.newFruitImg = document.getElementById('new-fruit-img');
+    this.newFruitScore = document.getElementById('new-fruit-score');
     // Continue button uses the basic fruit image. Dimensions are set once
     // fruit images load so the aspect ratio remains natural.
     this.continueFruit.src = FRUITS.basic.image;
@@ -24,6 +27,21 @@ export default class LevelCompleteMode {
     debug('LevelCompleteMode created');
   }
 
+  /**
+   * Determines which fruit type is introduced in the next level.
+   * Returns `null` if the upcoming level does not add a new fruit or
+   * if the current level is the last one.
+   */
+  getNextNewFruit() {
+    if (this.manager.level >= LEVELS.length - 1) return null;
+    const current = new Set(LEVELS[this.manager.level].fruits.map(f => f.type));
+    const next = LEVELS[this.manager.level + 1].fruits.map(f => f.type);
+    for (const t of next) {
+      if (!current.has(t)) return t;
+    }
+    return null;
+  }
+
   // Enter waits for fruit images so the continue button can scale
   // to the correct aspect ratio before appearing.
   async enter() {
@@ -32,6 +50,18 @@ export default class LevelCompleteMode {
     const h = FRUITS.basic.size * 100;
     this.continueFruit.style.height = `${h}vh`;
     this.continueFruit.style.width = `${h * FRUITS.basic.aspect}vh`;
+    const newType = this.getNextNewFruit();
+    if (newType) {
+      const cfg = FRUITS[newType];
+      const nh = cfg.size * 80;
+      this.newFruitImg.src = cfg.image;
+      this.newFruitImg.style.height = `${nh}vh`;
+      this.newFruitImg.style.width = `${nh * cfg.aspect}vh`;
+      this.newFruitScore.textContent = `+${cfg.score}`;
+      this.newFruitBox.style.display = 'flex';
+    } else {
+      this.newFruitBox.style.display = 'none';
+    }
     const levelNum = this.manager.level + 1;
     if (this.manager.level >= LEVELS.length - 1) {
       this.levelLabel.textContent = 'Game Complete';
@@ -54,6 +84,7 @@ export default class LevelCompleteMode {
     this.container.style.display = 'none';
     cancelAnimationFrame(this.animationId);
     clearTimeout(this.showTimeout);
+    this.newFruitBox.style.display = 'none';
     this.pose.stop();
     debug('LevelCompleteMode exit');
   };

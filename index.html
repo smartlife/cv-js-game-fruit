@@ -100,6 +100,26 @@
       transform: translateX(-50%);
       pointer-events: none;
     }
+    #new-fruit-box {
+      position: absolute;
+      bottom: 5%;
+      left: 50%;
+      transform: translateX(-50%);
+      display: none;
+      align-items: center;
+      gap: 2vh;
+      color: #fff;
+      font-size: 5vh;
+      background: rgba(0, 64, 0, 0.6);
+      border: 0.5vh solid #fff;
+      border-radius: 1vh;
+      padding: 1vh 2vh;
+      box-sizing: border-box;
+      pointer-events: none;
+    }
+    #new-fruit-box img {
+      pointer-events: none;
+    }
     #hud {
       position: absolute;
       top: 0;
@@ -139,6 +159,10 @@
       <div id="final-score"></div>
     </div>
     <img id="continue-fruit" alt="Continue">
+    <div id="new-fruit-box">
+      <img id="new-fruit-img" alt="New">
+      <span id="new-fruit-score"></span>
+    </div>
   </section>
 
   <!-- External libraries for pose detection -->
