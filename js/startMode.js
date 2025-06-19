@@ -64,7 +64,7 @@ export default class StartMode {
   loop = async (timestamp) => {
     const realDt = (timestamp - this.lastTime) / 1000;
     this.lastTime = timestamp;
-    const hands = await this.pose.update(realDt);
+    const hands = await this.pose.update(realDt, true, true);
     this.checkStartCut(hands);
     if (this.manager.current === 'start') {
       this.animationId = requestAnimationFrame(this.loop);
