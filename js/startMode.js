@@ -10,6 +10,7 @@ export default class StartMode {
     this.video = document.getElementById('intro-video');
     this.canvas = document.getElementById('intro-canvas');
     this.startFruit = document.getElementById('start-fruit');
+    this.startText = document.getElementById('start-text');
     // Use the image of the basic fruit for the start button. Dimensions are set
     // once the fruit images have loaded and their aspect ratios are known.
     this.startFruit.src = FRUITS.basic.image;
@@ -19,14 +20,24 @@ export default class StartMode {
     debug('StartMode created');
   }
 
-  // Enter initializes the webcam and ensures fruit images are loaded so
-  // the start button can scale correctly using the fruit's aspect ratio.
+  // Enter initializes the webcam and pose detector. The start fruit and
+  // accompanying text remain hidden until the detector is ready so the
+  // player doesn't see the oversized image before we know its aspect
+  // ratio. Once everything is loaded we size the fruit correctly and
+  // reveal both elements.
   async enter() {
     this.container.style.display = 'block';
+    this.startFruit.style.visibility = 'hidden';
+    if (this.startText) this.startText.style.visibility = 'hidden';
+
     await Promise.all([this.pose.init(), loadFruitAspects()]);
+
     const h = FRUITS.basic.size * 100;
     this.startFruit.style.height = `${h}vh`;
     this.startFruit.style.width = `${h * FRUITS.basic.aspect}vh`;
+    this.startFruit.style.visibility = 'visible';
+    if (this.startText) this.startText.style.visibility = 'visible';
+
     this.lastTime = performance.now();
     this.loop(this.lastTime);
     debug('StartMode enter');
