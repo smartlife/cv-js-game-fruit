@@ -11,6 +11,7 @@ export default class StartMode {
     this.canvas = document.getElementById('intro-canvas');
     this.startFruit = document.getElementById('start-fruit');
     this.startText = document.getElementById('start-text');
+    this.instructionText = document.getElementById('instruction-text');
     // Use the image of the basic fruit for the start button. Dimensions are set
     // once the fruit images have loaded and their aspect ratios are known.
     this.startFruit.src = FRUITS.basic.image;
@@ -20,15 +21,17 @@ export default class StartMode {
     debug('StartMode created');
   }
 
-  // Enter initializes the webcam and pose detector. The start fruit and
-  // accompanying text remain hidden until the detector is ready so the
-  // player doesn't see the oversized image before we know its aspect
-  // ratio. Once everything is loaded we size the fruit correctly and
-  // reveal both elements.
+  // Enter initializes the webcam and pose detector. While they load we
+  // display a message telling the player to enable their webcam.
+  // The fruit and start text stay hidden so the user doesn't see the
+  // oversized fruit before its aspect ratio is known. Once everything
+  // is ready we hide the instruction text, size the fruit correctly and
+  // reveal the start message.
   async enter() {
     this.container.style.display = 'block';
     this.startFruit.style.visibility = 'hidden';
     if (this.startText) this.startText.style.visibility = 'hidden';
+    if (this.instructionText) this.instructionText.style.visibility = 'visible';
 
     await Promise.all([this.pose.init(), loadFruitAspects()]);
 
@@ -37,6 +40,7 @@ export default class StartMode {
     this.startFruit.style.width = `${h * FRUITS.basic.aspect}vh`;
     this.startFruit.style.visibility = 'visible';
     if (this.startText) this.startText.style.visibility = 'visible';
+    if (this.instructionText) this.instructionText.style.visibility = 'hidden';
 
     this.lastTime = performance.now();
     this.loop(this.lastTime);
