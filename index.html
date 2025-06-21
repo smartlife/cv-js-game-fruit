@@ -106,7 +106,7 @@
       left: 50%;
       transform: translateX(-50%);
       display: none;
-      flex-direction: column;
+      flex-direction: row;
       align-items: center;
       gap: 2vh;
       color: #fff;
@@ -119,10 +119,6 @@
       pointer-events: none;
     }
     #new-fruit-box img {
-      pointer-events: none;
-    }
-    #new-fruit-title {
-      font-size: 4vh;
       pointer-events: none;
     }
     #continue-text {
@@ -178,7 +174,6 @@
     <div id="continue-text">Slice the fruit to continue</div>
     <img id="continue-fruit" alt="Continue">
     <div id="new-fruit-box">
-      <div id="new-fruit-title">New fruit</div>
       <img id="new-fruit-img" alt="New">
       <span id="new-fruit-score"></span>
     </div>
