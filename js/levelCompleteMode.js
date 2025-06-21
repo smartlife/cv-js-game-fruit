@@ -45,8 +45,9 @@ export default class LevelCompleteMode {
 
   // Enter waits for fruit images so the continue button can scale
   // to the correct aspect ratio before appearing. It also prepares the
-  // "new fruit" preview and hides the continue prompt until the player
-  // is allowed to proceed.
+  // preview of the next fruit as a horizontal layout of the image and
+  // its score and hides the continue prompt until the player is allowed
+  // to proceed.
   async enter() {
     this.container.style.display = 'block';
     await Promise.all([this.pose.init(), loadFruitAspects()]);
@@ -60,7 +61,10 @@ export default class LevelCompleteMode {
       this.newFruitImg.src = cfg.image;
       this.newFruitImg.style.height = `${nh}vh`;
       this.newFruitImg.style.width = `${nh * cfg.aspect}vh`;
-      this.newFruitScore.textContent = `+${cfg.score}`;
+      const score = cfg.score;
+      // Display a '+' only for positive scores so negative values are
+      // shown without a redundant sign.
+      this.newFruitScore.textContent = score > 0 ? `+${score}` : `${score}`;
       this.newFruitBox.style.display = 'flex';
     } else {
       this.newFruitBox.style.display = 'none';
