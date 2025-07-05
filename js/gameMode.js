@@ -2,7 +2,7 @@ import PoseProcessor from './poseProcessor.js';
 import Fruit from './fruit.js';
 import { DEBUG, debug } from './config.js';
 import { LEVELS, chooseFruit } from './levelConfig.js';
-import { loadFruitAspects } from './fruitConfig.js';
+import { FRUITS, loadFruitAspects } from './fruitConfig.js';
 import { segmentsClose } from './geometry.js';
 
 function samplePoisson(lambda) {
@@ -111,12 +111,43 @@ export default class GameMode {
     const vx = (fallX - x) / tCross;
     const endVy = vy + g * tCross;
 
-    const fruit = new Fruit(cfg.image, x, startY, vx, vy, width, height, cfg.score, this.canvas.width);
+    const fruit = new Fruit(cfg.imageObj || cfg.image, x, startY, vx, vy, width, height, cfg.score, this.canvas.width, cfg.type);
     fruit.highestY = highestY;
     fruit.endVy = endVy;
 
     this.fruits.push(fruit);
     debug('Spawn fruit', fruit);
+  }
+
+  // Fruits can define a `sliceAll` option in their config. When such a
+  // fruit is cut all other fruits on screen are removed and a shower of
+  // fast-moving pieces is spawned. This method performs that behaviour
+  // using the provided fruit as the explosion origin.
+  handleSliceAll(fruit) {
+    const baseCfg = FRUITS[fruit.type];
+    const cfg = baseCfg.sliceAll;
+    if (!cfg) return;
+    // Remove and score all other fruits currently on screen.
+    this.fruits.forEach(other => {
+      if (other !== fruit && other.alive && other.type !== 'piece') {
+        other.alive = false;
+        this.score += other.score;
+      }
+    });
+    // Spawn several pieces flying in random directions.
+    const pieceCount = 6;
+    for (let i = 0; i < pieceCount; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = cfg.piecesSpeed * this.canvas.height;
+      const vx = Math.cos(angle) * speed;
+      const vy = Math.sin(angle) * speed;
+      const h = this.canvas.height * baseCfg.size * 0.5;
+      const w = h * (cfg.piecesAspect || baseCfg.aspect);
+      const p = new Fruit(cfg.piecesImageObj || cfg.piecesImage, fruit.x, fruit.y, vx, vy,
+        w, h, 0, null, 'piece');
+      this.fruits.push(p);
+    }
+    this.updateDisplay();
   }
 
   checkCollisions(hands) {
@@ -135,7 +166,12 @@ export default class GameMode {
           f.alive = false;
           this.score += f.score;
           debug('Fruit cut', f);
-          this.updateDisplay();
+          const cfg = FRUITS[f.type];
+          if (cfg.sliceAll) {
+            this.handleSliceAll(f);
+          } else {
+            this.updateDisplay();
+          }
         }
       });
     });

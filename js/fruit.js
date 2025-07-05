@@ -8,21 +8,28 @@ export default class Fruit {
   // Fruit represents a falling object drawn with its original aspect ratio.
   // `width` and `height` are the display dimensions of the image. A
   // `boundingRadius` is derived from the larger dimension for simplified
-  // collision checks and spawn offset.
-  constructor(image, x, y, vx, vy, width, height, score = 1, canvasWidth = null) {
-    this.image = new Image();
-    this.image.src = image;
+  // collision checks and spawn offset. The constructor accepts either an image
+  // URL or a preloaded Image object so callers can avoid repeated loads.
+  constructor(image, x, y, vx, vy, width, height, score = 1, canvasWidth = null, type = 'unknown', gravity = 800) {
+    // `image` may be a string URL or a preloaded Image object.
+    if (image instanceof HTMLImageElement) {
+      this.image = image;
+    } else {
+      this.image = new Image();
+      this.image.src = image;
+    }
     this.x = x;
     this.y = y;
     this.prevX = x;
     this.prevY = y;
     this.vx = vx;
     this.vy = vy;
-    this.gravity = 800; // px per second^2
+    this.gravity = gravity; // px per second^2
     this.width = width;
     this.height = height;
     this.boundingRadius = Math.max(width, height) / 2;
     this.score = score;
+    this.type = type;
     this.alive = true;
     this.highestY = null;
     this.endVy = null;

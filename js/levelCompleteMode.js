@@ -62,9 +62,13 @@ export default class LevelCompleteMode {
       this.newFruitImg.style.height = `${nh}vh`;
       this.newFruitImg.style.width = `${nh * cfg.aspect}vh`;
       const score = cfg.score;
-      // Display a '+' only for positive scores so negative values are
-      // shown without a redundant sign.
-      this.newFruitScore.textContent = score > 0 ? `+${score}` : `${score}`;
+      if (cfg.scoreMessage) {
+        this.newFruitScore.textContent = cfg.scoreMessage;
+      } else {
+        // Display a '+' only for positive scores so negative values are
+        // shown without a redundant sign.
+        this.newFruitScore.textContent = score > 0 ? `+${score}` : `${score}`;
+      }
       this.newFruitBox.style.display = 'flex';
     } else {
       this.newFruitBox.style.display = 'none';
