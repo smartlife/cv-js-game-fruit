@@ -167,7 +167,10 @@ export default class GameMode {
           this.score += f.score;
           debug('Fruit cut', f);
           const cfg = FRUITS[f.type];
-          if (cfg.sliceAll) {
+          // Pieces spawned from a pomegranate explosion do not exist in
+          // the FRUITS config. Guard against undefined so they can be cut
+          // without crashing the game.
+          if (cfg && cfg.sliceAll) {
             this.handleSliceAll(f);
           } else {
             this.updateDisplay();
