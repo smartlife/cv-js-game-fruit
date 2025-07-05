@@ -104,14 +104,19 @@ export const LEVELS = [
   }, 
 ];
 
-// utility to pick a fruit based on priorities
+// chooseFruit returns a random fruit configuration for the given level. Each
+// level lists fruit types with associated spawn priorities. The returned object
+// also exposes the fruit type so game logic can trigger special behaviours.
 export function chooseFruit(level) {
   const list = LEVELS[level].fruits;
   const total = list.reduce((s, f) => s + f.priority, 0);
   let r = Math.random() * total;
   for (const f of list) {
-    if (r < f.priority) return FRUITS[f.type];
+    if (r < f.priority) {
+      return { ...FRUITS[f.type], type: f.type };
+    }
     r -= f.priority;
   }
-  return FRUITS[list[0].type];
+  const t = list[0].type;
+  return { ...FRUITS[t], type: t };
 }
