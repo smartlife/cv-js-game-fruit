@@ -121,8 +121,10 @@ export default class GameMode {
 
   // Fruits can define a `sliceAll` option in their config. When such a
   // fruit is cut all other fruits on screen are removed and a shower of
-  // fast-moving pieces is spawned. This method performs that behaviour
-  // using the provided fruit as the explosion origin.
+  // pieces is spawned. The pieces shoot outwards from the pomegranate in
+  // ten evenly spaced angles between the vectors pointing to the top left
+  // and top right corners. This keeps the pieces moving upward so they
+  // leave the screen quickly and fall out of view.
   handleSliceAll(fruit) {
     const baseCfg = FRUITS[fruit.type];
     const cfg = baseCfg.sliceAll;
@@ -134,10 +136,15 @@ export default class GameMode {
         this.score += other.score;
       }
     });
-    // Spawn several pieces flying in random directions.
-    const pieceCount = 6;
+    // Spawn pieces flying outwards at upward angles. Angles are limited to
+    // ranges that cause the pieces to leave the screen above the explosion and
+    // continue falling out of view. The bounds are computed using the fruit
+    // position so pieces never travel straight up.
+    const leftBound = Math.atan2(-fruit.y, -fruit.x);
+    const rightBound = Math.atan2(-fruit.y, this.canvas.width - fruit.x);
+    const pieceCount = 10;
     for (let i = 0; i < pieceCount; i++) {
-      const angle = Math.random() * Math.PI * 2;
+      const angle = leftBound + (rightBound - leftBound) * ((i + 0.5) / pieceCount);
       const speed = cfg.piecesSpeed * this.canvas.height;
       const vx = Math.cos(angle) * speed;
       const vy = Math.sin(angle) * speed;
