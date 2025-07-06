@@ -35,6 +35,10 @@ export default class GameMode {
     this.animationId = null;
     this.lastTime = 0;
     this.timeSpeed = 1;
+    // Pieces from pomegranate explosions are queued here so they are added
+    // after the current collision check completes. This prevents the spawning
+    // hand stroke from slicing them immediately.
+    this.spawnQueue = [];
     debug('GameMode created');
   }
 
@@ -123,8 +127,9 @@ export default class GameMode {
   // fruit is cut all other fruits on screen are removed and a shower of
   // pieces is spawned. The pieces shoot outwards from the pomegranate in
   // ten evenly spaced angles between the vectors pointing to the top left
-  // and top right corners. This keeps the pieces moving upward so they
-  // leave the screen quickly and fall out of view.
+  // and top right corners. The right bound may wrap past \u03c0 so it is
+  // normalised to ensure a continuous range. New pieces are queued so they
+  // are not sliced by the same hand stroke that triggered the explosion.
   handleSliceAll(fruit) {
     const baseCfg = FRUITS[fruit.type];
     const cfg = baseCfg.sliceAll;
@@ -140,11 +145,13 @@ export default class GameMode {
     // ranges that cause the pieces to leave the screen above the explosion and
     // continue falling out of view. The bounds are computed using the fruit
     // position so pieces never travel straight up.
-    const leftBound = Math.atan2(-fruit.y, -fruit.x);
-    const rightBound = Math.atan2(-fruit.y, this.canvas.width - fruit.x);
+    let leftBound = Math.atan2(-fruit.y, -fruit.x);
+    let rightBound = Math.atan2(-fruit.y, this.canvas.width - fruit.x);
+    if (rightBound < leftBound) rightBound += Math.PI * 2;
     const pieceCount = 10;
     for (let i = 0; i < pieceCount; i++) {
-      const angle = leftBound + (rightBound - leftBound) * ((i + 0.5) / pieceCount);
+      let angle = leftBound + (rightBound - leftBound) * ((i + 0.5) / pieceCount);
+      angle = ((angle + Math.PI) % (Math.PI * 2)) - Math.PI;
       const speed = cfg.piecesSpeed * this.canvas.height;
       const vx = Math.cos(angle) * speed;
       const vy = Math.sin(angle) * speed;
@@ -152,7 +159,7 @@ export default class GameMode {
       const w = h * (cfg.piecesAspect || baseCfg.aspect);
       const p = new Fruit(cfg.piecesImageObj || cfg.piecesImage, fruit.x, fruit.y, vx, vy,
         w, h, 0, null, 'piece');
-      this.fruits.push(p);
+      this.spawnQueue.push(p);
     }
     this.updateDisplay();
   }
@@ -186,6 +193,10 @@ export default class GameMode {
       });
     });
     this.fruits = this.fruits.filter(f => f.alive && f.y < this.canvas.height + 100);
+    if (this.spawnQueue.length) {
+      this.fruits.push(...this.spawnQueue);
+      this.spawnQueue.length = 0;
+    }
   }
 
   loop = async (timestamp) => {
