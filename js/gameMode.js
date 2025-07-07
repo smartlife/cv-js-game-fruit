@@ -120,15 +120,14 @@ export default class GameMode {
     fruit.endVy = endVy;
 
     this.fruits.push(fruit);
-    debug('Spawn fruit', fruit);
   }
 
   // Fruits can define a `sliceAll` option in their config. When a pomegranate
   // is cut this method removes all other fruits, awards their score and
-  // spawns a ring of fast pieces. The ten pieces are evenly spaced around a
-  // full circle with a small random shift so each explosion looks slightly
-  // different. Pieces are queued so the hand stroke that triggered the
-  // explosion does not instantly slice them again.
+  // spawns a ring of fast pieces. The ten pieces are evenly spaced
+  // around a full circle. Each explosion picks a random orientation so
+  // the pattern varies. Pieces are queued so the slicing stroke that
+  // triggered the explosion does not cut them immediately.
   handleSliceAll(fruit) {
     const baseCfg = FRUITS[fruit.type];
     const cfg = baseCfg.sliceAll;
@@ -144,9 +143,13 @@ export default class GameMode {
     // fruit. A small random shift ensures the pattern is not always the
     // same while keeping the pieces evenly spaced.
     const pieceCount = 10;
-    const shift = Math.random() * (Math.PI * 2 / pieceCount);
+    // Start the ring of pieces at a random orientation so explosions
+    // look unique. The full 2π range ensures a complete circle of pieces.
+    const shift = Math.random() * Math.PI * 2;
+    const angles = [];
     for (let i = 0; i < pieceCount; i++) {
       const angle = shift + i * (Math.PI * 2 / pieceCount);
+      angles.push(angle);
       const speed = cfg.piecesSpeed * this.canvas.height;
       const vx = Math.cos(angle) * speed;
       const vy = Math.sin(angle) * speed;
@@ -156,6 +159,7 @@ export default class GameMode {
         w, h, 0, null, 'piece');
       this.spawnQueue.push(p);
     }
+    debug('Spawned pieces', angles.map(a => Math.round(a * 180 / Math.PI)), this.spawnQueue);
     this.updateDisplay();
   }
 
@@ -177,7 +181,6 @@ export default class GameMode {
         if (segmentsClose(p1, p2, f1, f2, radius)) {
           f.alive = false;
           this.score += f.score;
-          debug('Fruit cut', f);
           const cfg = FRUITS[f.type];
           // Pieces spawned from a pomegranate explosion do not exist in
           // the FRUITS config. Guard against undefined so they can be cut
