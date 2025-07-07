@@ -123,13 +123,12 @@ export default class GameMode {
     debug('Spawn fruit', fruit);
   }
 
-  // Fruits can define a `sliceAll` option in their config. When such a
-  // fruit is cut all other fruits on screen are removed and a shower of
-  // pieces is spawned. The pieces shoot outwards from the pomegranate in
-  // ten evenly spaced angles between the vectors pointing to the top left
-  // and top right corners. The right bound may wrap past \u03c0 so it is
-  // normalised to ensure a continuous range. New pieces are queued so they
-  // are not sliced by the same hand stroke that triggered the explosion.
+  // Fruits can define a `sliceAll` option in their config. When a pomegranate
+  // is cut this method removes all other fruits, awards their score and
+  // spawns a ring of fast pieces. The ten pieces are evenly spaced around a
+  // full circle with a small random shift so each explosion looks slightly
+  // different. Pieces are queued so the hand stroke that triggered the
+  // explosion does not instantly slice them again.
   handleSliceAll(fruit) {
     const baseCfg = FRUITS[fruit.type];
     const cfg = baseCfg.sliceAll;
@@ -141,17 +140,13 @@ export default class GameMode {
         this.score += other.score;
       }
     });
-    // Spawn pieces flying outwards at upward angles. Angles are limited to
-    // ranges that cause the pieces to leave the screen above the explosion and
-    // continue falling out of view. The bounds are computed using the fruit
-    // position so pieces never travel straight up.
-    let leftBound = Math.atan2(-fruit.y, -fruit.x);
-    let rightBound = Math.atan2(-fruit.y, this.canvas.width - fruit.x);
-    if (rightBound < leftBound) rightBound += Math.PI * 2;
+    // Spawn ten pieces travelling at equal angular offsets around the
+    // fruit. A small random shift ensures the pattern is not always the
+    // same while keeping the pieces evenly spaced.
     const pieceCount = 10;
+    const shift = Math.random() * (Math.PI * 2 / pieceCount);
     for (let i = 0; i < pieceCount; i++) {
-      let angle = leftBound + (rightBound - leftBound) * ((i + 0.5) / pieceCount);
-      angle = ((angle + Math.PI) % (Math.PI * 2)) - Math.PI;
+      const angle = shift + i * (Math.PI * 2 / pieceCount);
       const speed = cfg.piecesSpeed * this.canvas.height;
       const vx = Math.cos(angle) * speed;
       const vy = Math.sin(angle) * speed;
@@ -164,6 +159,9 @@ export default class GameMode {
     this.updateDisplay();
   }
 
+  // checkCollisions handles slicing detection against both hands and removes
+  // fruits that have moved off screen. It also triggers pomegranate explosions
+  // when appropriate and cleans up spawned pieces once they leave the canvas.
   checkCollisions(hands) {
     const palmR = this.canvas.height * 0.03;
     this.fruits.forEach(f => {
@@ -192,7 +190,17 @@ export default class GameMode {
         }
       });
     });
-    this.fruits = this.fruits.filter(f => f.alive && f.y < this.canvas.height + 100);
+    this.fruits = this.fruits.filter(f => {
+      if (!f.alive) return false;
+      if (f.type === 'piece') {
+        const r = f.boundingRadius;
+        return (
+          f.x >= -r && f.x <= this.canvas.width + r &&
+          f.y >= -r && f.y <= this.canvas.height + r
+        );
+      }
+      return f.y < this.canvas.height + 100;
+    });
     if (this.spawnQueue.length) {
       this.fruits.push(...this.spawnQueue);
       this.spawnQueue.length = 0;
