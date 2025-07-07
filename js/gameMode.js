@@ -16,6 +16,10 @@ function samplePoisson(lambda) {
   return k - 1;
 }
 
+// GameMode drives the core loop. It spawns fruits along parabolic paths,
+// updates them each frame, and checks for palm collisions so fruits are cut.
+// When a pomegranate is sliced, its explosion pieces are added to the
+// `spawnQueue` so they can be released over several frames.
 export default class GameMode {
   constructor(manager) {
     this.manager = manager;
