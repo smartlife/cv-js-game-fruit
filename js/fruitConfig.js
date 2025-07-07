@@ -41,7 +41,9 @@ export const FRUITS = {
     image: 'img/pomegranate.png',
     sliceAll: {
       piecesImage: 'img/pomegranate_pieces.png',
-      piecesSpeed: 10, // screen heights per second for explosion pieces
+      // Speed at which explosion pieces travel. Defined in screen heights per
+      // second so the motion scales with the canvas size.
+      piecesSpeed: 3,
     },
     score: 0,
     size: 0.15,

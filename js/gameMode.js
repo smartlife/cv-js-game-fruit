@@ -35,6 +35,10 @@ export default class GameMode {
     this.animationId = null;
     this.lastTime = 0;
     this.timeSpeed = 1;
+    // Pieces from pomegranate explosions are queued here so they are added
+    // after the current collision check completes. This prevents the spawning
+    // hand stroke from slicing them immediately.
+    this.spawnQueue = [];
     debug('GameMode created');
   }
 
@@ -116,13 +120,14 @@ export default class GameMode {
     fruit.endVy = endVy;
 
     this.fruits.push(fruit);
-    debug('Spawn fruit', fruit);
   }
 
-  // Fruits can define a `sliceAll` option in their config. When such a
-  // fruit is cut all other fruits on screen are removed and a shower of
-  // fast-moving pieces is spawned. This method performs that behaviour
-  // using the provided fruit as the explosion origin.
+  // Fruits can define a `sliceAll` option in their config. When a pomegranate
+  // is cut this method removes all other fruits, awards their score and
+  // spawns a ring of fast pieces. The ten pieces are evenly spaced
+  // around a full circle. Each explosion picks a random orientation so
+  // the pattern varies. Pieces are queued so the slicing stroke that
+  // triggered the explosion does not cut them immediately.
   handleSliceAll(fruit) {
     const baseCfg = FRUITS[fruit.type];
     const cfg = baseCfg.sliceAll;
@@ -134,10 +139,17 @@ export default class GameMode {
         this.score += other.score;
       }
     });
-    // Spawn several pieces flying in random directions.
-    const pieceCount = 6;
+    // Spawn ten pieces travelling at equal angular offsets around the
+    // fruit. A small random shift ensures the pattern is not always the
+    // same while keeping the pieces evenly spaced.
+    const pieceCount = 10;
+    // Start the ring of pieces at a random orientation so explosions
+    // look unique. The full 2π range ensures a complete circle of pieces.
+    const shift = Math.random() * Math.PI * 2;
+    const angles = [];
     for (let i = 0; i < pieceCount; i++) {
-      const angle = Math.random() * Math.PI * 2;
+      const angle = shift + i * (Math.PI * 2 / pieceCount);
+      angles.push(angle);
       const speed = cfg.piecesSpeed * this.canvas.height;
       const vx = Math.cos(angle) * speed;
       const vy = Math.sin(angle) * speed;
@@ -145,11 +157,15 @@ export default class GameMode {
       const w = h * (cfg.piecesAspect || baseCfg.aspect);
       const p = new Fruit(cfg.piecesImageObj || cfg.piecesImage, fruit.x, fruit.y, vx, vy,
         w, h, 0, null, 'piece');
-      this.fruits.push(p);
+      this.spawnQueue.push(p);
     }
+    debug('Spawned pieces', angles.map(a => Math.round(a * 180 / Math.PI)), this.spawnQueue);
     this.updateDisplay();
   }
 
+  // checkCollisions handles slicing detection against both hands and removes
+  // fruits that have moved off screen. It also triggers pomegranate explosions
+  // when appropriate and cleans up spawned pieces once they leave the canvas.
   checkCollisions(hands) {
     const palmR = this.canvas.height * 0.03;
     this.fruits.forEach(f => {
@@ -165,9 +181,11 @@ export default class GameMode {
         if (segmentsClose(p1, p2, f1, f2, radius)) {
           f.alive = false;
           this.score += f.score;
-          debug('Fruit cut', f);
           const cfg = FRUITS[f.type];
-          if (cfg.sliceAll) {
+          // Pieces spawned from a pomegranate explosion do not exist in
+          // the FRUITS config. Guard against undefined so they can be cut
+          // without crashing the game.
+          if (cfg && cfg.sliceAll) {
             this.handleSliceAll(f);
           } else {
             this.updateDisplay();
@@ -175,7 +193,21 @@ export default class GameMode {
         }
       });
     });
-    this.fruits = this.fruits.filter(f => f.alive && f.y < this.canvas.height + 100);
+    this.fruits = this.fruits.filter(f => {
+      if (!f.alive) return false;
+      if (f.type === 'piece') {
+        const r = f.boundingRadius;
+        return (
+          f.x >= -r && f.x <= this.canvas.width + r &&
+          f.y >= -r && f.y <= this.canvas.height + r
+        );
+      }
+      return f.y < this.canvas.height + 100;
+    });
+    if (this.spawnQueue.length) {
+      this.fruits.push(...this.spawnQueue);
+      this.spawnQueue.length = 0;
+    }
   }
 
   loop = async (timestamp) => {
