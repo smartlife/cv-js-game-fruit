@@ -12,6 +12,7 @@ export default class StartMode {
     this.startFruit = document.getElementById('start-fruit');
     this.startText = document.getElementById('start-text');
     this.instructionText = document.getElementById('instruction-text');
+    this.defaultInstruction = this.instructionText ? this.instructionText.textContent : '';
     // Use the image of the basic fruit for the start button. Dimensions are set
     // once the fruit images have loaded and their aspect ratios are known.
     this.startFruit.src = FRUITS.basic.image;
@@ -31,9 +32,18 @@ export default class StartMode {
     this.container.style.display = 'block';
     this.startFruit.style.visibility = 'hidden';
     if (this.startText) this.startText.style.visibility = 'hidden';
-    if (this.instructionText) this.instructionText.style.visibility = 'visible';
+    if (this.instructionText) {
+      this.instructionText.style.visibility = 'visible';
+      this.instructionText.textContent = this.defaultInstruction;
+    }
 
-    await Promise.all([this.pose.init(), loadFruitAspects()]);
+    // Update the instructions once the webcam stream is active but
+    // before the pose model loads so players see a loading message.
+    const onReady = () => {
+      if (this.instructionText) this.instructionText.textContent = 'loading...';
+    };
+
+    await Promise.all([this.pose.init(onReady), loadFruitAspects()]);
 
     const h = FRUITS.basic.size * 100;
     this.startFruit.style.height = `${h}vh`;
@@ -51,6 +61,7 @@ export default class StartMode {
     this.container.style.display = 'none';
     cancelAnimationFrame(this.animationId);
     this.pose.stop();
+    if (this.instructionText) this.instructionText.textContent = this.defaultInstruction;
     debug('StartMode exit');
   };
 

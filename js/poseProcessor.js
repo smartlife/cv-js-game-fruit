@@ -13,12 +13,20 @@ export default class PoseProcessor {
     this.prevRight = null;
   }
 
-  async init() {
+  /**
+   * Initializes the webcam and pose detector.
+   * If a callback is provided it is called once the webcam
+   * stream is active but before the pose model finishes loading.
+   * This allows callers to show a loading state while the
+   * MoveNet model downloads.
+   */
+  async init(onVideoReady = null) {
     if (USE_STUB) {
       // use synthetic animation instead of webcam
       this.fakeT = 0;
       this.canvas.height = this.video.videoHeight || this.canvas.clientHeight;
       this.canvas.width = this.canvas.height * 4 / 3;
+      if (onVideoReady) onVideoReady();
       debug('PoseProcessor using stub');
     } else {
       if (!PoseProcessor.stream) {
@@ -39,6 +47,7 @@ export default class PoseProcessor {
 
       this.canvas.width = this.video.videoHeight * 4 / 3;
       this.canvas.height = this.video.videoHeight;
+      if (onVideoReady) onVideoReady();
     }
 
     // load external pose detection library (placeholder)

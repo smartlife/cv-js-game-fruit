@@ -47,7 +47,8 @@ export default class LevelCompleteMode {
   // to the correct aspect ratio before appearing. It also prepares the
   // preview of the next fruit as a horizontal layout of the image and
   // its score and hides the continue prompt until the player is allowed
-  // to proceed.
+  // to proceed. When the last level is complete the continue button is
+  // permanently hidden so the game cannot restart.
   async enter() {
     this.container.style.display = 'block';
     await Promise.all([this.pose.init(), loadFruitAspects()]);
@@ -74,7 +75,8 @@ export default class LevelCompleteMode {
       this.newFruitBox.style.display = 'none';
     }
     const levelNum = this.manager.level + 1;
-    if (this.manager.level >= LEVELS.length - 1) {
+    const isFinal = this.manager.level >= LEVELS.length - 1;
+    if (isFinal) {
       this.levelLabel.textContent = 'Game Complete';
     } else {
       this.levelLabel.textContent = `Level ${levelNum} finished`;
@@ -83,11 +85,18 @@ export default class LevelCompleteMode {
     this.continueFruit.style.visibility = 'hidden';
     this.continueText.style.visibility = 'hidden';
     this.buttonReady = false;
-    this.showTimeout = setTimeout(() => {
-      this.continueFruit.style.visibility = 'visible';
-      this.continueText.style.visibility = 'visible';
-      this.buttonReady = true;
-    }, 2000);
+    if (isFinal) {
+      this.continueFruit.style.display = 'none';
+      this.continueText.style.display = 'none';
+    } else {
+      this.continueFruit.style.display = 'block';
+      this.continueText.style.display = 'block';
+      this.showTimeout = setTimeout(() => {
+        this.continueFruit.style.visibility = 'visible';
+        this.continueText.style.visibility = 'visible';
+        this.buttonReady = true;
+      }, 2000);
+    }
     this.lastTime = performance.now();
     this.loop(this.lastTime);
     debug('LevelCompleteMode enter');
@@ -99,6 +108,8 @@ export default class LevelCompleteMode {
     clearTimeout(this.showTimeout);
     this.newFruitBox.style.display = 'none';
     this.continueText.style.visibility = 'hidden';
+    this.continueFruit.style.display = 'block';
+    this.continueText.style.display = 'block';
     this.pose.stop();
     debug('LevelCompleteMode exit');
   };
