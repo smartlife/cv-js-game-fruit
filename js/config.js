@@ -5,6 +5,12 @@ export const MIN_KP_SCORE = 0.15;
 // Hand movement speed threshold expressed as a fraction of screen height per second
 export const ACTIVE_SPEED_FRACTION = 0.3;
 
+// Enable automatic zoom calculation on the start screen.
+export const AUTO_ZOOM = true;
+// How fast the zoom moves towards the target value each frame. Lower
+// values make adjustments smoother and reduce oscillations.
+export const ZOOM_SMOOTHING = 0.1;
+
 export function debug(...args) {
   if (DEBUG) {
     console.log(...args);
