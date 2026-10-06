@@ -126,7 +126,21 @@ export const LEVELS = [
       { type: 'mandarine', priority: 2 },
       { type: 'blueberry', priority: 0.4 },
     ],
-  },   
+  },
+
+  {
+    time: 60,
+    fruitsPerSecond: 15.0,
+    speed: 1.,
+    fruits: [
+      { type: 'pineapple', priority: 0.5 },
+      { type: 'pear', priority: 0.7 },
+      { type: 'apple', priority: 0.9 },
+      { type: 'mandarine', priority: 1.2 },
+      { type: 'blueberry', priority: 1.5 },
+      { type: 'robot', priority: 0.2 },
+    ],
+  },
 ];
 
 // chooseFruit returns a random fruit configuration for the given level. Each
