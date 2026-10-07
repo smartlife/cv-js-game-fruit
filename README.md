@@ -31,3 +31,12 @@ If the MoveNet model fails to load because of CORS restrictions, download the mo
 
 Edit `js/levelConfig.js` to tweak the game speed, duration, spawn rate or change which fruits appear in each level. The webcam stream and pose detector are kept alive across modes so they only need to initialize once.
 
+The first level tests strawberries: 30 seconds, one fruit per second on average,
+with equal pineapple and strawberry priorities. Cutting a strawberry doubles
+the spawn rate for 10 real seconds. If less time remains, the multiplier is
+`1 + 10 / remainingSeconds`, preserving the expected extra ten seconds of normal
+spawns. Strawberries do not spawn during the boost, and strawberries already on
+screen cannot stack or refresh it. Configure this effect with `spawnBoost.duration`
+and `spawnBoost.multiplier` in `js/fruitConfig.js`.
+
+Run gameplay checks with Node.js 22 or newer: `node --test tests/*.test.mjs`.

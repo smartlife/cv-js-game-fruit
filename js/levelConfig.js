@@ -1,6 +1,15 @@
 import { FRUITS } from './fruitConfig.js';
 
 export const LEVELS = [
+  {
+    time: 30,
+    fruitsPerSecond: 1,
+    speed: 0.5,
+    fruits: [
+      { type: 'pineapple', priority: 1 },
+      { type: 'strawberry', priority: 1 },
+    ],
+  },
   
   {
     time: 15,
@@ -146,8 +155,12 @@ export const LEVELS = [
 // chooseFruit returns a random fruit configuration for the given level. Each
 // level lists fruit types with associated spawn priorities. The returned object
 // also exposes the fruit type so game logic can trigger special behaviours.
-export function chooseFruit(level) {
-  const list = LEVELS[level].fruits;
+// During a spawn boost its source fruits are excluded before weights are summed;
+// a level containing only excluded fruits produces no spawn.
+export function chooseFruit(level, boostActive = false) {
+  const list = LEVELS[level].fruits.filter(f =>
+    f.priority > 0 && !(boostActive && FRUITS[f.type].spawnBoost));
+  if (!list.length) return null;
   const total = list.reduce((s, f) => s + f.priority, 0);
   let r = Math.random() * total;
   for (const f of list) {

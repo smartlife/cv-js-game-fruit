@@ -2,6 +2,12 @@
 // images are preloaded before a level starts so spawning a fruit can use a
 // ready-made Image element without waiting for network requests.
 export const FRUITS = {
+  strawberry: {
+    image: 'img/strawberry.png',
+    score: 1,
+    size: 0.12,
+    spawnBoost: { duration: 10, multiplier: 2 },
+  },
   basic: {
     image: 'img/watermelon.png',
     score: 1,

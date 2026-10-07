@@ -30,7 +30,8 @@ export default class GameMode {
     this.time = 0;
     this.score = 0;
     this.fruits = [];
-    this.spawnTimer = 0;
+    this.spawnBoostRemaining = 0;
+    this.spawnBoostMultiplier = 1;
     this.fruitsPerSecond = 1;
     this.animationId = null;
     this.lastTime = 0;
@@ -56,6 +57,9 @@ export default class GameMode {
     this.time = levelCfg.time;
     this.score = 0;
     this.fruits = [];
+    this.spawnQueue = [];
+    this.spawnBoostRemaining = 0;
+    this.spawnBoostMultiplier = 1;
     this.updateDisplay();
     this.lastTime = performance.now();
     this.loop(this.lastTime);
@@ -75,7 +79,8 @@ export default class GameMode {
   }
 
   spawnFruit() {
-    const cfg = chooseFruit(this.level);
+    const cfg = chooseFruit(this.level, this.spawnBoostRemaining > 0);
+    if (!cfg) return;
     // Spawn from either side and calculate a parabolic trajectory.
     // 1) pick a random side and starting height
     // 2) choose a peak higher than the start
@@ -122,6 +127,36 @@ export default class GameMode {
     this.fruits.push(fruit);
   }
 
+  // Preserve the configured extra spawn budget even near the end of a level.
+  // Timers use real seconds, independently of the fruit physics speed. Existing
+  // strawberries cannot stack or refresh a boost, including two cut together.
+  handleSpawnBoost(fruit) {
+    const cfg = FRUITS[fruit.type]?.spawnBoost;
+    if (!cfg || this.finished || this.time <= 0 || this.spawnBoostRemaining > 0) return;
+    this.spawnBoostRemaining = Math.min(cfg.duration, this.time);
+    this.spawnBoostMultiplier = 1 +
+      (cfg.multiplier - 1) * cfg.duration / this.spawnBoostRemaining;
+  }
+
+  // Integrate the Poisson spawn rate across boost expiry and the level deadline.
+  // Sampling each real-time slice avoids losing a short boost's final fraction
+  // of a second; bounded chunks also keep the Poisson sampler numerically stable.
+  advanceSpawning(realDt) {
+    let remaining = Math.min(realDt, Math.max(0, this.time));
+    while (remaining > 0) {
+      const boosted = this.spawnBoostRemaining > 0;
+      const duration = Math.min(remaining, 1, boosted ? this.spawnBoostRemaining : Infinity);
+      const rate = this.fruitsPerSecond * (boosted ? this.spawnBoostMultiplier : 1);
+      const count = samplePoisson(rate * duration);
+      for (let i = 0; i < count; i++) this.spawnFruit();
+      remaining -= duration;
+      if (boosted) {
+        this.spawnBoostRemaining = Math.max(0, this.spawnBoostRemaining - duration);
+        if (this.spawnBoostRemaining === 0) this.spawnBoostMultiplier = 1;
+      }
+    }
+  }
+
   // Fruits can define a `sliceAll` option in their config. When a pomegranate
   // is cut this method removes all other fruits, awards their score and
   // spawns a ring of fast pieces. The ten pieces are evenly spaced
@@ -165,14 +200,14 @@ export default class GameMode {
 
   // checkCollisions handles slicing detection against both hands and removes
   // fruits that have moved off screen. It also triggers pomegranate explosions
-  // when appropriate and cleans up spawned pieces once they leave the canvas.
+  // and strawberry boosts when appropriate, and cleans up off-screen pieces.
   checkCollisions(hands) {
     const palmR = this.canvas.height * 0.03;
     this.fruits.forEach(f => {
       if (!f.alive) return;
       ['left', 'right'].forEach(side => {
         const h = hands[side];
-        if (!h || !h.active) return;
+        if (!f.alive || !h || !h.active) return;
         const p1 = { x: h.prevX, y: h.prevY };
         const p2 = { x: h.x, y: h.y };
         const f1 = { x: f.prevX, y: f.prevY };
@@ -182,6 +217,7 @@ export default class GameMode {
           f.alive = false;
           this.score += f.score;
           const cfg = FRUITS[f.type];
+          if (cfg?.spawnBoost) this.handleSpawnBoost(f);
           // Pieces spawned from a pomegranate explosion do not exist in
           // the FRUITS config. Guard against undefined so they can be cut
           // without crashing the game.
@@ -214,21 +250,12 @@ export default class GameMode {
     const realDt = (timestamp - this.lastTime) / 1000;
     this.lastTime = timestamp;
     if (!this.finished) {
+      this.advanceSpawning(realDt);
       this.time -= realDt;
       if (this.time <= 0) {
         this.time = 0;
         this.finished = true;
         this.timerEl.style.visibility = 'hidden';
-      }
-    }
-    if (!this.finished) {
-      this.spawnTimer += realDt;
-      if (this.spawnTimer >= 1) {
-        const count = samplePoisson(this.fruitsPerSecond * this.spawnTimer);
-        for (let i = 0; i < count; i++) {
-          this.spawnFruit();
-        }
-        this.spawnTimer -= 1;
       }
     }
     const dt = realDt * this.timeSpeed;
