@@ -78,60 +78,51 @@
       width: 100%;
       height: 100%;
     }
-    #complete-text {
+    #results-layout {
       position: absolute;
-      top: 45%;
-      width: 100%;
-      text-align: center;
-      color: #fff;
-      font-size: 5vh;
-      background: rgba(0, 64, 0, 0.6);
-      padding: 1vh;
-      box-sizing: border-box;
-    }
-    #final-score {
-      font-size: 8vh;
-      margin-top: 2vh;
-    }
-    #continue-fruit {
-      position: absolute;
-      top: 20%;
-      left: 50%;
-      transform: translateX(-50%);
+      inset: 3vh 4vw 20vh;
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 3vw;
+      color: white;
       pointer-events: none;
     }
-    #new-fruit-box {
-      position: absolute;
-      bottom: 5%;
-      left: 50%;
-      transform: translateX(-50%);
-      display: none;
-      flex-direction: row;
-      align-items: center;
-      gap: 2vh;
-      color: #fff;
-      font-size: 5vh;
-      background: rgba(0, 64, 0, 0.6);
-      border: 0.5vh solid #fff;
-      border-radius: 1vh;
-      padding: 1vh 2vh;
-      box-sizing: border-box;
-      pointer-events: none;
+    #complete-text, #leaderboard-panel {
+      background: rgba(0, 32, 16, 0.9);
+      border: 1px solid rgba(166, 255, 186, 0.4);
+      border-radius: 2vh;
+      padding: 2vh 2vw;
+      min-width: 0;
     }
-    #new-fruit-box img {
-      pointer-events: none;
-    }
-    #continue-text {
-      position: absolute;
-      top: 10%;
-      width: 100%;
-      text-align: center;
-      color: #fff;
-      font-size: 5vh;
-      background: rgba(0, 64, 0, 0.6);
-      padding: 1vh;
-      box-sizing: border-box;
-      visibility: hidden;
+    #complete-text { display: flex; flex-direction: column; justify-content: center; text-align: center; }
+    #level-finished { font-size: 3.5vh; }
+    #current-rank { font-size: 19vh; font-weight: 800; color: #bcff65; line-height: 1.1; }
+    .rank-caption { font-size: 2.5vh; }
+    #final-score { font-size: 5vh; margin-top: 3vh; font-weight: bold; overflow-wrap: anywhere; }
+    #leaderboard-panel { display: flex; flex-direction: column; }
+    #leaderboard-panel h2 { margin: 0 0 1vh; font-size: 3.5vh; }
+    #leaderboard-note { font-size: 1.8vh; margin: 0 0 1vh; }
+    #leaderboard-panel table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 2.4vh; font-variant-numeric: tabular-nums; }
+    #leaderboard-panel th, #leaderboard-panel td { padding: 0.9vh 0.6vw; text-align: left; border-bottom: 1px solid #315341; }
+    #leaderboard-panel th:first-child { width: 13%; }
+    #leaderboard-panel th:last-child { width: 22%; }
+    #leaderboard-panel td:last-child, #leaderboard-panel th:last-child { text-align: right; }
+    #leaderboard-panel td { overflow-wrap: anywhere; }
+    .current-result { background: #bcff65; color: #102314; font-weight: bold; }
+    #continue-fruit { position: absolute; bottom: 2vh; left: 50%; transform: translateX(-50%); pointer-events: none; }
+    #continue-text { position: absolute; bottom: 13vh; width: 100%; text-align: center; color: white; font-size: 2.8vh; visibility: hidden; }
+    #new-fruit-box { position: absolute; bottom: 3vh; right: 4vw; display: none; align-items: center; gap: 1vw; padding: 1vh; border-radius: 1vh; background: rgba(0, 32, 16, 0.9); color: white; font-size: 2.5vh; pointer-events: none; }
+    @media (max-aspect-ratio: 3/4) {
+      #results-layout { grid-template-columns: 1fr; grid-template-rows: 22vh 1fr; gap: 1vh; }
+      #complete-text { display: grid; grid-template-columns: 1fr 1fr; align-items: center; }
+      #level-finished { grid-column: 1 / -1; font-size: 2.8vh; }
+      #current-rank { grid-row: 2 / 4; font-size: 12vh; }
+      #final-score { margin: 0; font-size: 3.5vh; }
+      .rank-caption { font-size: 2vh; }
+      #leaderboard-panel table { font-size: 1.8vh; }
+      #leaderboard-panel th, #leaderboard-panel td { padding: 0.55vh 1vw; }
+      #leaderboard-panel h2 { font-size: 2.5vh; }
+      #new-fruit-box { font-size: 1.8vh; max-width: 32vw; }
     }
     #hud {
       position: absolute;
@@ -167,9 +158,21 @@
       <video id="complete-video" autoplay muted playsinline></video>
       <canvas id="complete-canvas"></canvas>
     </div>
-    <div id="complete-text">
-      <div id="level-finished"></div>
-      <div id="final-score"></div>
+    <div id="results-layout">
+      <div id="complete-text" aria-live="polite">
+        <div id="level-finished"></div>
+        <div id="current-rank"></div>
+        <div class="rank-caption">Your place · last 10 runs</div>
+        <div id="final-score"></div>
+      </div>
+      <div id="leaderboard-panel">
+        <h2>Level leaderboard</h2>
+        <p id="leaderboard-note"></p>
+        <table aria-label="Ranking of the last ten runs for this level">
+          <thead><tr><th scope="col">Place</th><th scope="col">Run</th><th scope="col">Score</th></tr></thead>
+          <tbody id="leaderboard-rows"></tbody>
+        </table>
+      </div>
     </div>
     <div id="continue-text">Slice the fruit to continue</div>
     <img id="continue-fruit" alt="Continue">
