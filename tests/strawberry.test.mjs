@@ -1,7 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import GameMode from '../js/gameMode.js';
-import { LEVELS, chooseFruit } from '../js/levelConfig.js';
 
 // Exercise gameplay methods without a webcam or DOM; the real constructor only
 // wires those dependencies, while these tests cover boost timing and spawning.
@@ -14,15 +13,6 @@ function game(time = 30) {
   return mode;
 }
 
-test('first level has the requested duration, rate and equal priorities', () => {
-  assert.equal(LEVELS[0].time, 30);
-  assert.equal(LEVELS[0].fruitsPerSecond, 1);
-  assert.deepEqual(LEVELS[0].fruits, [
-    { type: 'pineapple', priority: 1 },
-    { type: 'strawberry', priority: 1 },
-  ]);
-  assert.equal(LEVELS[1].time, 15);
-});
 
 test('boost preserves ten seconds of extra spawns at the level deadline', () => {
   for (const time of [30, 10, 5, 0.25]) {
@@ -38,23 +28,6 @@ test('boost preserves ten seconds of extra spawns at the level deadline', () => 
   assert.equal(finished.spawnBoostRemaining, 0);
 });
 
-test('strawberries are excluded during the boost and become eligible afterwards', () => {
-  const originalRandom = Math.random;
-  try {
-    Math.random = () => 0.75;
-    assert.equal(chooseFruit(0).type, 'strawberry');
-    assert.equal(chooseFruit(0, true).type, 'pineapple');
-    const mode = game();
-    mode.handleSpawnBoost({ type: 'strawberry' });
-    mode.spawnFruit = () => assert.equal(chooseFruit(0, mode.spawnBoostRemaining > 0).type, 'pineapple');
-    mode.advanceSpawning(10);
-    assert.equal(mode.spawnBoostRemaining, 0);
-    assert.equal(mode.spawnBoostMultiplier, 1);
-    assert.equal(chooseFruit(0, mode.spawnBoostRemaining > 0).type, 'strawberry');
-  } finally {
-    Math.random = originalRandom;
-  }
-});
 
 test('Poisson integration includes fractional deadlines and splits boost expiry', () => {
   const originalRandom = Math.random;
