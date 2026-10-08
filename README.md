@@ -40,3 +40,10 @@ screen cannot stack or refresh it. Configure this effect with `spawnBoost.durati
 and `spawnBoost.multiplier` in `js/fruitConfig.js`.
 
 Run gameplay checks with Node.js 22 or newer: `node --test tests/*.test.mjs`.
+
+Each level completion shows its score, current rank, and the full leaderboard of
+the last ten runs for that level. History is stored in browser `localStorage`
+under `fruit-slice:leaderboard:v1:<level index>`. The oldest run expires even if
+it has the highest score; retained runs rank by descending score, with the newest
+run first on ties. If storage is blocked or full, results remain in memory for
+the session and the completion screen shows a notice.
