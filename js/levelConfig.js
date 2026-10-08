@@ -2,16 +2,6 @@ import { FRUITS } from './fruitConfig.js';
 
 export const LEVELS = [
   {
-    time: 30,
-    fruitsPerSecond: 1,
-    speed: 0.5,
-    fruits: [
-      { type: 'pineapple', priority: 1 },
-      { type: 'strawberry', priority: 1 },
-    ],
-  },
-  
-  {
     time: 15,
     fruitsPerSecond: 1.2,
     speed: 0.5,
@@ -150,6 +140,21 @@ export const LEVELS = [
       { type: 'robot', priority: 0.2 },
     ],
   },
+
+  {
+    time: 50,
+    fruitsPerSecond: 1,
+    speed: 1.1,
+    fruits: [
+      { type: 'pineapple', priority: 0.5 },
+      { type: 'pear', priority: 0.7 },
+      { type: 'apple', priority: 1 },
+      { type: 'mandarine', priority: 0.5 },
+      { type: 'blueberry', priority: 0.2 },
+      { type: 'robot', priority: 0.2 },
+      { type: 'strawberry', priority: 0.1 },
+    ],
+  },  
 ];
 
 // chooseFruit returns a random fruit configuration for the given level. Each
