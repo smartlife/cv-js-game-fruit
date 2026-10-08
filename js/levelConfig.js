@@ -118,12 +118,12 @@ export const LEVELS = [
     fruitsPerSecond: 3.5,
     speed: 0.9,
     fruits: [
-      { type: 'pomegranate', priority: 0.3 },
+      { type: 'pomegranate', priority: 0.6 },
       { type: 'pineapple', priority: 0.5 },
       { type: 'pear', priority: 1 },
       { type: 'apple', priority: 1.5 },
       { type: 'mandarine', priority: 2 },
-      { type: 'blueberry', priority: 0.4 },
+      { type: 'blueberry', priority: 1.4 },
     ],
   },
 
@@ -142,17 +142,17 @@ export const LEVELS = [
   },
 
   {
-    time: 50,
-    fruitsPerSecond: 1,
-    speed: 1.1,
+    time: 60,
+    fruitsPerSecond: 3,
+    speed: 1.2,
     fruits: [
       { type: 'pineapple', priority: 0.5 },
       { type: 'pear', priority: 0.7 },
       { type: 'apple', priority: 1 },
       { type: 'mandarine', priority: 0.5 },
       { type: 'blueberry', priority: 0.2 },
-      { type: 'robot', priority: 0.2 },
-      { type: 'strawberry', priority: 0.1 },
+      { type: 'robot', priority: 0.1 },
+      { type: 'strawberry', priority: 0.4 },
     ],
   },  
 ];
