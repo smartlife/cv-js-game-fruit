@@ -56,9 +56,7 @@ export default class LevelCompleteMode {
     entries.forEach((entry, index) => {
       const row = document.createElement('tr');
       if (entry.current) row.className = 'current-result';
-      const values = [index + 1, entry.current ? '' : new Date(entry.timestamp).toLocaleString([], {
-        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-      }), entry.score];
+      const values = [index + 1, '', entry.score];
       values.forEach((value, column) => {
         if (entry.current && column === 1) return;
         const cell = document.createElement('td');
@@ -66,6 +64,18 @@ export default class LevelCompleteMode {
         cell.textContent = entry.current && column === 0 ? `#${value}` : value;
         if (entry.current && column === 0) cell.id = 'current-rank';
         if (entry.current && column === 2) cell.id = 'final-score';
+        if (!entry.current && column === 1) {
+          // Use the browser's local date and timezone with a 24-hour clock.
+          // Keep the time together so wrapping never splits the clock value.
+          const date = new Date(entry.timestamp);
+          cell.textContent = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+          const time = document.createElement('span');
+          time.className = 'run-time';
+          time.textContent = date.toLocaleTimeString(undefined, {
+            hour: '2-digit', minute: '2-digit', hour12: false
+          });
+          cell.appendChild(time);
+        }
         row.appendChild(cell);
       });
       this.rankingRows.appendChild(row);

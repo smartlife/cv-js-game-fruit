@@ -8,6 +8,13 @@ export default class PoseProcessor {
     this.video = videoElement;
     this.canvas = canvasElement;
     this.ctx = this.canvas.getContext('2d');
+    // Keep cursor artwork outside the camera container's stacking context so
+    // it remains visible over headings, the leaderboard, and the game HUD.
+    this.handCanvas = document.createElement('canvas');
+    this.handCanvas.className = 'hand-overlay';
+    this.handCanvas.setAttribute('aria-hidden', 'true');
+    this.canvas.closest('.screen').appendChild(this.handCanvas);
+    this.handCtx = this.handCanvas.getContext('2d');
     this.detector = null; // will reference the shared detector
     this.prevLeft = null;
     this.prevRight = null;
@@ -73,7 +80,12 @@ export default class PoseProcessor {
     return poses[0] || null;
   }
 
+  // Mirror the gameplay coordinate system on the foreground layer and clear
+  // old trails even when tracking is lost. Resizing only happens when needed.
   drawPalms(hands) {
+    if (this.handCanvas.width !== this.canvas.width) this.handCanvas.width = this.canvas.width;
+    if (this.handCanvas.height !== this.canvas.height) this.handCanvas.height = this.canvas.height;
+    this.handCtx.clearRect(0, 0, this.handCanvas.width, this.handCanvas.height);
     if (!hands) return;
     const r = this.canvas.height * 0.03;
     ['left', 'right'].forEach(side => {
@@ -81,22 +93,22 @@ export default class PoseProcessor {
       if (!h) return;
       const color = h.active ? 'rgba(255,0,0,0.7)' : 'rgba(255,255,255,0.7)';
       // draw previous position
-      this.ctx.fillStyle = color;
-      this.ctx.beginPath();
-      this.ctx.arc(h.prevX, h.prevY, r, 0, Math.PI * 2);
-      this.ctx.fill();
+      this.handCtx.fillStyle = color;
+      this.handCtx.beginPath();
+      this.handCtx.arc(h.prevX, h.prevY, r, 0, Math.PI * 2);
+      this.handCtx.fill();
       // draw connecting segment
-      this.ctx.strokeStyle = color;
-      this.ctx.lineWidth = r * 2;
-      this.ctx.lineCap = 'round';
-      this.ctx.beginPath();
-      this.ctx.moveTo(h.prevX, h.prevY);
-      this.ctx.lineTo(h.x, h.y);
-      this.ctx.stroke();
+      this.handCtx.strokeStyle = color;
+      this.handCtx.lineWidth = r * 2;
+      this.handCtx.lineCap = 'round';
+      this.handCtx.beginPath();
+      this.handCtx.moveTo(h.prevX, h.prevY);
+      this.handCtx.lineTo(h.x, h.y);
+      this.handCtx.stroke();
       // draw current position
-      this.ctx.beginPath();
-      this.ctx.arc(h.x, h.y, r, 0, Math.PI * 2);
-      this.ctx.fill();
+      this.handCtx.beginPath();
+      this.handCtx.arc(h.x, h.y, r, 0, Math.PI * 2);
+      this.handCtx.fill();
     });
   }
 
