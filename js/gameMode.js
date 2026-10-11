@@ -32,6 +32,9 @@ export default class GameMode {
     this.fruits = [];
     this.spawnBoostRemaining = 0;
     this.spawnBoostMultiplier = 1;
+    this.spawnBoostDuration = 0;
+    this.spawnBoostExtraFruits = 0;
+    this.strawberryIndicators = [];
     this.fruitsPerSecond = 1;
     this.animationId = null;
     this.lastTime = 0;
@@ -60,6 +63,9 @@ export default class GameMode {
     this.spawnQueue = [];
     this.spawnBoostRemaining = 0;
     this.spawnBoostMultiplier = 1;
+    this.spawnBoostDuration = 0;
+    this.spawnBoostExtraFruits = 0;
+    this.strawberryIndicators = [];
     this.updateDisplay();
     this.lastTime = performance.now();
     this.loop(this.lastTime);
@@ -70,6 +76,7 @@ export default class GameMode {
     this.container.style.display = 'none';
     cancelAnimationFrame(this.animationId);
     this.pose.stop();
+    this.strawberryIndicators = [];
     debug('GameMode exit');
   }
 
@@ -136,6 +143,17 @@ export default class GameMode {
     this.spawnBoostRemaining = Math.min(cfg.duration, this.time);
     this.spawnBoostMultiplier = 1 +
       (cfg.multiplier - 1) * cfg.duration / this.spawnBoostRemaining;
+    this.spawnBoostDuration = this.spawnBoostRemaining;
+    this.spawnBoostExtraFruits = this.fruitsPerSecond * (cfg.multiplier - 1) * cfg.duration;
+    // The Poisson process has an expected extra budget, not a fixed spawn count.
+    // Round up fractional budgets so their final fraction still has an indicator.
+    this.strawberryIndicators = Array.from(
+      { length: Math.ceil(this.spawnBoostExtraFruits) }, () => ({
+        right: Math.random() < 0.5,
+        offset: Math.random() * 0.6 - 0.3,
+        y: Math.random(),
+        angle: Math.random() * Math.PI * 2,
+      }));
   }
 
   // Integrate the Poisson spawn rate across boost expiry and the level deadline.
@@ -154,6 +172,34 @@ export default class GameMode {
         this.spawnBoostRemaining = Math.max(0, this.spawnBoostRemaining - duration);
         if (this.spawnBoostRemaining === 0) this.spawnBoostMultiplier = 1;
       }
+    }
+  }
+
+  // Shrink the remaining expected budget in real time. Canvas draw order is the
+  // z-order: truncating the tail removes the topmost overlapping berries first,
+  // while the retained berries keep their original position and rotation.
+  updateStrawberryIndicators() {
+    const count = this.spawnBoostRemaining > 0
+      ? Math.ceil(this.spawnBoostExtraFruits * this.spawnBoostRemaining / this.spawnBoostDuration)
+      : 0;
+    this.strawberryIndicators.length = Math.min(this.strawberryIndicators.length, count);
+  }
+
+  // Draw static decorations at the canvas edges using the gameplay artwork and
+  // size. Normalized positions preserve placement when the video canvas resizes;
+  // centers sit within ±0.3 image widths of either edge. They have no collisions.
+  drawStrawberryIndicators() {
+    const cfg = FRUITS.strawberry;
+    if (!cfg.imageObj?.complete || !cfg.imageObj.naturalWidth) return;
+    const height = this.canvas.height * cfg.size;
+    const width = height * cfg.aspect;
+    for (const berry of this.strawberryIndicators) {
+      this.ctx.save();
+      this.ctx.translate((berry.right ? this.canvas.width : 0) + berry.offset * width,
+        berry.y * this.canvas.height);
+      this.ctx.rotate(berry.angle);
+      this.ctx.drawImage(cfg.imageObj, -width / 2, -height / 2, width, height);
+      this.ctx.restore();
     }
   }
 
@@ -258,6 +304,7 @@ export default class GameMode {
         this.timerEl.style.visibility = 'hidden';
       }
     }
+    this.updateStrawberryIndicators();
     const dt = realDt * this.timeSpeed;
     const hands = await this.pose.update(realDt, false);
     this.fruits.forEach(f => f.update(dt));
@@ -265,6 +312,7 @@ export default class GameMode {
 
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.fruits.forEach(f => f.draw(this.ctx));
+    this.drawStrawberryIndicators();
     this.pose.drawPalms(hands);
 
     this.updateDisplay();

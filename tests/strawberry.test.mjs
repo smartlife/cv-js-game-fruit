@@ -9,6 +9,7 @@ function game(time = 30) {
   Object.assign(mode, {
     level: 0, time, finished: false, fruitsPerSecond: 1,
     spawnBoostRemaining: 0, spawnBoostMultiplier: 1,
+    spawnBoostDuration: 0, spawnBoostExtraFruits: 0, strawberryIndicators: [],
   });
   return mode;
 }
@@ -69,4 +70,31 @@ test('two hands cutting the same strawberry award score only once', () => {
   assert.equal(mode.score, 1);
   assert.equal(mode.spawnBoostRemaining, 10);
   assert.equal(mode.fruits.length, 0);
+});
+
+// Check both normal and compressed boosts, including overlapping indicators:
+// the surviving prefix must retain its identity and fixed random transforms.
+test('edge berries track remaining budget and remove topmost layers first', () => {
+  for (const time of [30, 0.25]) {
+    const mode = game(time);
+    mode.fruitsPerSecond = 2;
+    mode.handleSpawnBoost({ type: 'strawberry' });
+    const original = [...mode.strawberryIndicators];
+    assert.equal(original.length, 20);
+    for (const berry of original) {
+      assert.ok(berry.offset >= -0.3 && berry.offset <= 0.3);
+      assert.ok(berry.y >= 0 && berry.y <= 1);
+      assert.ok(berry.angle >= 0 && berry.angle < Math.PI * 2);
+    }
+    mode.handleSpawnBoost({ type: 'strawberry' });
+    assert.deepEqual(mode.strawberryIndicators, original);
+    mode.spawnFruit = () => {};
+    mode.advanceSpawning(mode.spawnBoostDuration / 2);
+    mode.updateStrawberryIndicators();
+    assert.deepEqual(mode.strawberryIndicators, original.slice(0, 10));
+    assert.equal(mode.strawberryIndicators[9], original[9]);
+    mode.advanceSpawning(mode.spawnBoostRemaining);
+    mode.updateStrawberryIndicators();
+    assert.equal(mode.strawberryIndicators.length, 0);
+  }
 });

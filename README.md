@@ -39,6 +39,11 @@ spawns. Strawberries do not spawn during the boost, and strawberries already on
 screen cannot stack or refresh it. Configure this effect with `spawnBoost.duration`
 and `spawnBoost.multiplier` in `js/fruitConfig.js`.
 
+During a boost, static strawberries decorate both screen edges. Their count
+represents the expected extra spawn budget (rounded up), decreases with the
+remaining real time, and removes the topmost overlapping decorations first.
+Positions and rotations stay fixed for each activation.
+
 Run gameplay checks with Node.js 22 or newer: `node --test tests/*.test.mjs`.
 
 Each level completion shows its score, current rank, and the full leaderboard of
