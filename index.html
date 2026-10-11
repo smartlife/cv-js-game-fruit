@@ -80,49 +80,48 @@
     }
     #results-layout {
       position: absolute;
-      inset: 3vh 4vw 20vh;
-      display: grid;
-      grid-template-columns: 1fr 1.2fr;
-      gap: 3vw;
+      top: 4vh;
+      left: 4vw;
+      width: min(46vw, 640px);
       color: white;
       pointer-events: none;
     }
-    #complete-text, #leaderboard-panel {
-      background: rgba(0, 32, 16, 0.9);
+    #leaderboard-panel {
+      background: rgba(0, 32, 16, 0.88);
       border: 1px solid rgba(166, 255, 186, 0.4);
       border-radius: 2vh;
       padding: 2vh 2vw;
-      min-width: 0;
     }
-    #complete-text { display: flex; flex-direction: column; justify-content: center; text-align: center; }
-    #level-finished { font-size: 3.5vh; }
-    #current-rank { font-size: 19vh; font-weight: 800; color: #bcff65; line-height: 1.1; }
-    .rank-caption { font-size: 2.5vh; }
-    #final-score { font-size: 5vh; margin-top: 3vh; font-weight: bold; overflow-wrap: anywhere; }
-    #leaderboard-panel { display: flex; flex-direction: column; }
+    #level-finished { font-size: 2.2vh; color: #bcff65; margin-bottom: 1vh; }
     #leaderboard-panel h2 { margin: 0 0 1vh; font-size: 3.5vh; }
-    #leaderboard-note { font-size: 1.8vh; margin: 0 0 1vh; }
-    #leaderboard-panel table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 2.4vh; font-variant-numeric: tabular-nums; }
-    #leaderboard-panel th, #leaderboard-panel td { padding: 0.9vh 0.6vw; text-align: left; border-bottom: 1px solid #315341; }
-    #leaderboard-panel th:first-child { width: 13%; }
-    #leaderboard-panel th:last-child { width: 22%; }
+    #leaderboard-note { font-size: 1.6vh; margin: 0 0 1.5vh; color: #c4d6ca; }
+    #leaderboard-panel table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 2vh; font-variant-numeric: tabular-nums; }
+    #leaderboard-panel th, #leaderboard-panel td { padding: 0.65vh 0.6vw; text-align: left; border-bottom: 1px solid #315341; }
+    #leaderboard-panel th:first-child { width: 18%; }
+    #leaderboard-panel th:last-child { width: 28%; }
     #leaderboard-panel td:last-child, #leaderboard-panel th:last-child { text-align: right; }
     #leaderboard-panel td { overflow-wrap: anywhere; }
     .current-result { background: #bcff65; color: #102314; font-weight: bold; }
-    #continue-fruit { position: absolute; bottom: 2vh; left: 50%; transform: translateX(-50%); pointer-events: none; }
-    #continue-text { position: absolute; bottom: 13vh; width: 100%; text-align: center; color: white; font-size: 2.8vh; visibility: hidden; }
-    #new-fruit-box { position: absolute; bottom: 3vh; right: 4vw; display: none; align-items: center; gap: 1vw; padding: 1vh; border-radius: 1vh; background: rgba(0, 32, 16, 0.9); color: white; font-size: 2.5vh; pointer-events: none; }
+    #leaderboard-panel .current-result td { padding-top: 2vh; padding-bottom: 2vh; border: 0; }
+    #current-rank, #final-score { font-size: 6vh; line-height: 1.1; }
+    .current-result td:nth-child(2) { font-size: 2.5vh; }
+    #continue-fruit { position: absolute; top: 34vh; left: 68%; transform: translateX(-50%); pointer-events: none; }
+    #continue-text { position: absolute; top: 47vh; left: 53%; width: 34%; text-align: center; color: white; font-size: 2.5vh; visibility: hidden; padding: 1.5vh 1vw; box-sizing: border-box; border-radius: 1vh; background: rgba(0, 32, 16, 0.88); }
+    #continue-text strong { display: block; font-size: 3.2vh; margin-bottom: 1vh; color: #bcff65; }
+    #new-fruit-box { position: absolute; top: 63vh; left: 53%; width: 34%; box-sizing: border-box; display: none; align-items: center; justify-content: center; gap: 1vw; padding: 1.5vh 1vw; border-radius: 1vh; background: rgba(0, 32, 16, 0.88); color: white; font-size: 2.2vh; pointer-events: none; }
+    #new-fruit-box strong { display: block; margin-bottom: 0.5vh; }
     @media (max-aspect-ratio: 3/4) {
-      #results-layout { grid-template-columns: 1fr; grid-template-rows: 22vh 1fr; gap: 1vh; }
-      #complete-text { display: grid; grid-template-columns: 1fr 1fr; align-items: center; }
-      #level-finished { grid-column: 1 / -1; font-size: 2.8vh; }
-      #current-rank { grid-row: 2 / 4; font-size: 12vh; }
-      #final-score { margin: 0; font-size: 3.5vh; }
-      .rank-caption { font-size: 2vh; }
-      #leaderboard-panel table { font-size: 1.8vh; }
-      #leaderboard-panel th, #leaderboard-panel td { padding: 0.55vh 1vw; }
+      #results-layout { top: 2vh; left: 4vw; width: 92vw; }
       #leaderboard-panel h2 { font-size: 2.5vh; }
-      #new-fruit-box { font-size: 1.8vh; max-width: 32vw; }
+      #leaderboard-note { font-size: 1.4vh; }
+      #leaderboard-panel table { font-size: 1.6vh; }
+      #leaderboard-panel th, #leaderboard-panel td { padding: 0.35vh 1vw; }
+      #current-rank, #final-score { font-size: 4.5vh; }
+      #leaderboard-panel .current-result td { padding-top: 1.2vh; padding-bottom: 1.2vh; }
+      #continue-fruit { top: 62vh; left: 58%; }
+      #continue-text { top: 74vh; left: 8%; width: 84%; font-size: 2vh; }
+      #continue-text strong { font-size: 2.5vh; }
+      #new-fruit-box { top: 86vh; left: 8%; width: 84%; font-size: 1.8vh; }
     }
     #hud {
       position: absolute;
@@ -159,13 +158,8 @@
       <canvas id="complete-canvas"></canvas>
     </div>
     <div id="results-layout">
-      <div id="complete-text" aria-live="polite">
+      <div id="leaderboard-panel" aria-live="polite">
         <div id="level-finished"></div>
-        <div id="current-rank"></div>
-        <div class="rank-caption">Your place · last 10 runs</div>
-        <div id="final-score"></div>
-      </div>
-      <div id="leaderboard-panel">
         <h2>Level leaderboard</h2>
         <p id="leaderboard-note"></p>
         <table aria-label="Ranking of the last ten runs for this level">
@@ -174,11 +168,11 @@
         </table>
       </div>
     </div>
-    <div id="continue-text">Slice the fruit to continue</div>
+    <div id="continue-text"><strong id="next-level-label"></strong>Slice the watermelon with your hand to start the next level.</div>
     <img id="continue-fruit" alt="Continue">
     <div id="new-fruit-box">
       <img id="new-fruit-img" alt="New">
-      <span id="new-fruit-score"></span>
+      <div><strong>New fruit in the next level</strong><span id="new-fruit-score"></span></div>
     </div>
   </section>
 

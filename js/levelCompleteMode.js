@@ -12,12 +12,11 @@ export default class LevelCompleteMode {
     this.video = document.getElementById('complete-video');
     this.canvas = document.getElementById('complete-canvas');
     this.levelLabel = document.getElementById('level-finished');
-    this.rankLabel = document.getElementById('current-rank');
     this.rankingRows = document.getElementById('leaderboard-rows');
     this.rankingNote = document.getElementById('leaderboard-note');
-    this.scoreLabel = document.getElementById('final-score');
     this.continueFruit = document.getElementById('continue-fruit');
     this.continueText = document.getElementById('continue-text');
+    this.nextLevelLabel = document.getElementById('next-level-label');
     this.newFruitBox = document.getElementById('new-fruit-box');
     this.newFruitImg = document.getElementById('new-fruit-img');
     this.newFruitScore = document.getElementById('new-fruit-score');
@@ -48,11 +47,10 @@ export default class LevelCompleteMode {
   }
 
   // Render all retained runs, highlighting this completion by identity rather
-  // than score so equal scores still highlight exactly one row. Use textContent
+  // than score so equal scores still highlight exactly one enlarged result. Use textContent
   // for stored values, and expose storage failures without blocking play.
   renderLeaderboard() {
-    const { entries, rank, persisted } = recordResult(this.manager.level, this.manager.lastScore);
-    this.rankLabel.textContent = `#${rank}`;
+    const { entries, persisted } = recordResult(this.manager.level, this.manager.lastScore);
     this.rankingNote.textContent = `Last ${entries.length} runs · newest wins ties${persisted ? '' : ' · saved for this session only'}`;
     this.rankingRows.replaceChildren();
     entries.forEach((entry, index) => {
@@ -61,9 +59,11 @@ export default class LevelCompleteMode {
       const values = [index + 1, entry.current ? 'This run' : new Date(entry.timestamp).toLocaleString([], {
         month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
       }), entry.score];
-      values.forEach(value => {
+      values.forEach((value, column) => {
         const cell = document.createElement('td');
-        cell.textContent = value;
+        cell.textContent = entry.current && column === 0 ? `#${value}` : value;
+        if (entry.current && column === 0) cell.id = 'current-rank';
+        if (entry.current && column === 2) cell.id = 'final-score';
         row.appendChild(cell);
       });
       this.rankingRows.appendChild(row);
@@ -71,7 +71,7 @@ export default class LevelCompleteMode {
   }
 
   // Record the completed run once on entry, before asynchronous camera setup.
-  // Keep all ten rows visible alongside the rank and delay gesture continuation.
+  // Expand the current run inside the ranking and delay gesture continuation.
   // The final level retains its leaderboard with continuation hidden.
   async enter() {
     this.container.style.display = 'block';
@@ -106,7 +106,7 @@ export default class LevelCompleteMode {
     } else {
       this.levelLabel.textContent = `Level ${levelNum} finished`;
     }
-    this.scoreLabel.textContent = `Score: ${this.manager.lastScore}`;
+    this.nextLevelLabel.textContent = isFinal ? '' : `Next: Level ${levelNum + 1}`;
     this.continueFruit.style.visibility = 'hidden';
     this.continueText.style.visibility = 'hidden';
     this.buttonReady = false;
