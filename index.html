@@ -78,6 +78,18 @@
       width: 100%;
       height: 100%;
     }
+    /* A separate transparent layer keeps hand trails above every information panel. */
+    .hand-overlay {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100vh * 4 / 3);
+      height: 100vh;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .run-time { margin-left: 0.6em; white-space: nowrap; }
     #results-layout {
       position: absolute;
       top: 4vh;
@@ -93,10 +105,10 @@
       padding: 2vh 2vw;
     }
     #level-finished { font-size: 4.5vh; font-weight: 700; text-align: center; margin: 0 0 3vh; }
-    #leaderboard-panel table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 2vh; font-variant-numeric: tabular-nums; }
-    #leaderboard-panel th, #leaderboard-panel td { padding: 0.65vh 0.6vw; text-align: left; border-bottom: 1px solid #315341; }
+    #leaderboard-panel table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 3vh; font-variant-numeric: tabular-nums; }
+    #leaderboard-panel th, #leaderboard-panel td { padding: 0.7vh 0.6vw; text-align: left; border-bottom: 1px solid #315341; }
     #leaderboard-panel th:first-child { width: 18%; }
-    #leaderboard-panel th:last-child { width: 42%; }
+    #leaderboard-panel th:last-child { width: 34%; }
     #leaderboard-panel td:last-child, #leaderboard-panel th:last-child { text-align: right; }
     #leaderboard-panel td { overflow-wrap: anywhere; }
     .current-result { background: #bcff65; color: #102314; font-weight: bold; }
@@ -104,15 +116,15 @@
     #current-rank { font-size: 7vh; line-height: 1.1; }
     #final-score { font-size: 10vh; line-height: 1.1; }
     #continue-fruit { position: absolute; top: 23vh; left: 68%; transform: translateX(-50%); pointer-events: none; }
-    #continue-text { position: absolute; top: 43vh; left: 51%; width: 38%; text-align: center; color: #bcff65; font-weight: 700; font-size: 4.5vh; visibility: hidden; }
+    #continue-text { position: absolute; top: 43vh; left: 51%; width: 38%; text-align: center; color: #bcff65; font-weight: 700; font-size: 4.5vh; visibility: hidden; background: rgba(0, 32, 16, 0.72); padding: 1.5vh 1vw; border-radius: 2vh; box-sizing: border-box; pointer-events: none; }
     #next-level-info { position: absolute; top: 60vh; left: 51%; width: 38%; box-sizing: border-box; padding: 2vh 1vw; border-radius: 2vh; background: rgba(0, 32, 16, 0.88); color: white; text-align: center; pointer-events: none; }
     #next-level-label { display: block; font-size: 3.8vh; margin-bottom: 2vh; }
-    #new-fruit-box { display: none; align-items: center; justify-content: center; gap: 1.5vw; font-size: 3.2vh; }
+    #new-fruit-box { display: none; align-items: center; justify-content: center; gap: 1.5vw; font-size: 3.8vh; }
     #new-fruit-description { display: block; margin-bottom: 0.5vh; }
     @media (max-aspect-ratio: 3/4) {
       #results-layout { top: 2vh; left: 4vw; width: 92vw; }
       #level-finished { font-size: 3.5vh; margin-bottom: 2vh; }
-      #leaderboard-panel table { font-size: 1.6vh; }
+      #leaderboard-panel table { font-size: 2.2vh; }
       #leaderboard-panel th, #leaderboard-panel td { padding: 0.35vh 1vw; }
       #current-rank { font-size: 5vh; }
       #final-score { font-size: 7vh; }
@@ -121,7 +133,7 @@
       #continue-text { top: 70vh; left: 8%; width: 84%; font-size: 3.5vh; }
       #next-level-info { top: 77vh; left: 8%; width: 84%; padding: 1.5vh 2vw; }
       #next-level-label { font-size: 3vh; margin-bottom: 1vh; }
-      #new-fruit-box { font-size: 2.5vh; }
+      #new-fruit-box { font-size: 3vh; }
       #new-fruit-img { max-height: 7vh; width: auto !important; }
     }
     #hud {
