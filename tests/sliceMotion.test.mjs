@@ -59,8 +59,18 @@ test('thresholds scale with resolution and require sustained motion at high FPS'
   }
 });
 
-test('PoseProcessor applies confirmation independently to both hands', async () => {
-  const canvas = { width: 1000, height: 1000, getContext: () => ({}) };
+test('PoseProcessor applies confirmation independently to both hands', async (t) => {
+  // Stub only the overlay DOM wiring introduced by the cursor rendering change.
+  const originalDocument = globalThis.document;
+  globalThis.document = { createElement: () => ({
+    setAttribute() {}, getContext: () => ({})
+  }) };
+  t.after(() => {
+    if (originalDocument === undefined) delete globalThis.document;
+    else globalThis.document = originalDocument;
+  });
+  const canvas = { width: 1000, height: 1000, getContext: () => ({}),
+    closest: () => ({ appendChild() {} }) };
   const pose = new PoseProcessor({ videoWidth: 1000, videoHeight: 1000 }, canvas);
   let i = 0;
   pose.estimate = async () => ({ keypoints: [
