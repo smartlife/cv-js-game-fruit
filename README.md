@@ -9,6 +9,7 @@ This repository now contains the initial structure of a pose‑controlled fruit 
 - **index.html** – loads external pose detection libraries and switches between different game modes.
 - **js/poseProcessor.js** – wrapper around pose detection library. Initializes the webcam stream and pose detector once and draws highlighted palms.
 - **js/config.js** – global configuration with a `DEBUG` flag, `USE_STUB` to simulate movement without a webcam and `ACTIVE_SPEED_FRACTION` controlling how fast a hand must move to become active.
+- **js/sliceMotion.js** – confirms a slice from consecutive fast, directionally coherent wrist movements, allowing smooth arcs and rejecting recognition jitter.
 - **js/fruitConfig.js** – list of available fruits with image and size. Each
   fruit's aspect ratio is measured when the image loads.
 - **js/levelConfig.js** – game levels defining speed, duration, spawn rate and prioritized fruit choices.
@@ -47,3 +48,12 @@ under `fruit-slice:leaderboard:v1:<level index>`. The oldest run expires even if
 it has the highest score; retained runs rank by descending score, with the newest
 run first on ties. If storage is blocked or full, results remain in memory for
 the session and the completion screen shows a notice.
+
+Slicing requires at least three consecutive fast movements, at least 35 ms of
+motion and travel of 4% of the video height. Neighbouring steps may turn by up
+to 60 degrees, and net displacement must be at least 80% of travelled distance
+in the trailing confirmation window, allowing smooth arcs while rejecting
+back-and-forth jitter. Slow or tiny steps, reversals, missing wrists, and sample
+gaps over 150 ms reset confirmation. The same detector controls the start
+button and fruit slicing, separately for each hand. Tune the `SLICE_*` constants
+in `js/config.js` together with `ACTIVE_SPEED_FRACTION`.
