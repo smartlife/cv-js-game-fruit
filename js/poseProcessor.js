@@ -1,4 +1,5 @@
-import { DEBUG, USE_STUB, MIN_KP_SCORE, ACTIVE_SPEED_FRACTION, debug } from './config.js';
+import { USE_STUB, MIN_KP_SCORE, debug } from './config.js';
+import SliceMotion from './sliceMotion.js';
 
 export default class PoseProcessor {
   static stream = null;       // shared webcam MediaStream
@@ -16,8 +17,7 @@ export default class PoseProcessor {
     this.canvas.closest('.screen').appendChild(this.handCanvas);
     this.handCtx = this.handCanvas.getContext('2d');
     this.detector = null; // will reference the shared detector
-    this.prevLeft = null;
-    this.prevRight = null;
+    this.motion = { left: new SliceMotion(), right: new SliceMotion() };
   }
 
   /**
@@ -28,6 +28,8 @@ export default class PoseProcessor {
    * MoveNet model downloads.
    */
   async init(onVideoReady = null) {
+    this.motion.left.reset();
+    this.motion.right.reset();
     if (USE_STUB) {
       // use synthetic animation instead of webcam
       this.fakeT = 0;
@@ -115,7 +117,6 @@ export default class PoseProcessor {
   async update(dt, draw = true) {
     let left = null;
     let right = null;
-    const threshold = this.canvas.height * ACTIVE_SPEED_FRACTION;
     if (USE_STUB) {
       this.fakeT += dt;
       const amp = this.canvas.height * 0.3;
@@ -144,28 +145,10 @@ export default class PoseProcessor {
       }
     }
 
-    const hands = { left: null, right: null };
-    if (left) {
-      const prev = this.prevLeft || left;
-      const v = this.prevLeft && dt > 0 ? {
-        vx: (left.x - this.prevLeft.x) / dt,
-        vy: (left.y - this.prevLeft.y) / dt
-      } : { vx: 0, vy: 0 };
-      const speed = Math.hypot(v.vx, v.vy);
-      hands.left = { ...left, ...v, speed, active: speed > threshold, prevX: prev.x, prevY: prev.y };
-    }
-    if (right) {
-      const prev = this.prevRight || right;
-      const v = this.prevRight && dt > 0 ? {
-        vx: (right.x - this.prevRight.x) / dt,
-        vy: (right.y - this.prevRight.y) / dt
-      } : { vx: 0, vy: 0 };
-      const speed = Math.hypot(v.vx, v.vy);
-      hands.right = { ...right, ...v, speed, active: speed > threshold, prevX: prev.x, prevY: prev.y };
-    }
-
-    this.prevLeft = left;
-    this.prevRight = right;
+    const hands = {
+      left: this.motion.left.update(left, dt, this.canvas.height),
+      right: this.motion.right.update(right, dt, this.canvas.height)
+    };
 
     if (draw) {
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -176,6 +159,8 @@ export default class PoseProcessor {
   }
 
   stop() {
+    this.motion.left.reset();
+    this.motion.right.reset();
     if (USE_STUB) return;
     if (this.video && this.video.srcObject) {
       // Only pause playback to keep the shared webcam stream alive
