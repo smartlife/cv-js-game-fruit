@@ -1,4 +1,4 @@
-import { USE_STUB, MIN_KP_SCORE, debug } from './config.js';
+import { USE_STUB, MIN_KP_SCORE, SLICE_MAX_SAMPLE_GAP, debug } from './config.js';
 import SliceMotion from './sliceMotion.js';
 import { motionDebug } from './motionDebug.js';
 
@@ -19,6 +19,16 @@ export default class PoseProcessor {
     this.handCtx = this.handCanvas.getContext('2d');
     this.detector = null; // will reference the shared detector
     this.motion = { left: new SliceMotion(), right: new SliceMotion() };
+    this.resetSampling();
+  }
+
+  // A camera frame is one measurement, even when the display refreshes faster.
+  // Reset sampling on mode changes so old strokes cannot carry into a new mode.
+  resetSampling() {
+    this.lastFrameTime = null;
+    this.lastSampleWallMs = null;
+    this.lastHands = { left: null, right: null };
+    this.lastDebugSampleMs = null;
   }
 
   /**
@@ -29,6 +39,7 @@ export default class PoseProcessor {
    * MoveNet model downloads.
    */
   async init(onVideoReady = null) {
+    this.resetSampling();
     this.motion.left.reset();
     this.motion.right.reset();
     if (USE_STUB) {
@@ -115,8 +126,35 @@ export default class PoseProcessor {
     });
   }
 
+  /** Process each camera timestamp once and use camera elapsed seconds for
+   * velocity. Repeated display frames retain the indicator but have a zero-length
+   * collision segment; replaying the last stroke would cut unrelated fruit.
+   * A stalled feed clears tracking after the normal maximum sample gap.
+   */
   async update(dt, draw = true) {
     const updateStartedMs = performance.now();
+    const renderDt = dt;
+    const frameTime = this.video.currentTime;
+    if (!USE_STUB && Number.isFinite(frameTime)) {
+      if (frameTime === this.lastFrameTime) {
+        const stale = (updateStartedMs - this.lastSampleWallMs) / 1000 > SLICE_MAX_SAMPLE_GAP;
+        if (stale) {
+          this.motion.left.reset();
+          this.motion.right.reset();
+          this.lastHands = { left: null, right: null };
+        }
+        const held = Object.fromEntries(Object.entries(this.lastHands).map(([side, hand]) =>
+          [side, hand ? { ...hand, prevX: hand.x, prevY: hand.y, vx: 0, vy: 0, speed: 0 } : null]));
+        if (draw) {
+          this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+          this.drawPalms(held);
+        }
+        return held;
+      }
+      dt = this.lastFrameTime == null ? 0 : frameTime - this.lastFrameTime;
+      this.lastFrameTime = frameTime;
+      this.lastSampleWallMs = updateStartedMs;
+    }
     let rawWrists = null;
     let left = null;
     let right = null;
@@ -155,9 +193,10 @@ export default class PoseProcessor {
       right: this.motion.right.update(right, dt, this.canvas.height)
     };
 
+    this.lastHands = hands;
     if (motionDebug.recording) {
       const timestampMs = performance.now();
-      motionDebug.append({ timestampMs, dt, updateStartedMs,
+      motionDebug.append({ timestampMs, dt, renderDt, frameTime, updateStartedMs,
         processingMs: timestampMs - updateStartedMs,
         sampleIntervalMs: this.lastDebugSampleMs == null ? null : timestampMs - this.lastDebugSampleMs,
         screen: this.canvas.closest('.screen')?.id,
@@ -176,6 +215,7 @@ export default class PoseProcessor {
   }
 
   stop() {
+    this.resetSampling();
     this.motion.left.reset();
     this.motion.right.reset();
     if (USE_STUB) return;

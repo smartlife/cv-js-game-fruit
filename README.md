@@ -69,3 +69,64 @@ if storage is unavailable, download still works until the page closes.
 Logs contain wrist coordinates/confidence, video and canvas dimensions, mode,
 sample/processing timing, per-hand activation and every detector gate, plus
 threshold settings. They contain no webcam images/video and are not uploaded.
+
+Pose updates now consume each camera `currentTime` once, independently of the
+display refresh rate. Speed uses elapsed camera time; repeated display frames
+retain the hand indicator with a zero-length collision segment. A feed stalled
+for over 150 ms clears tracking. Single-sample position jumps over 25% of video
+height reset the stroke without creating a slicing segment. Debug capture logs
+only processed camera samples, including `frameTime` and display `renderDt`.
+The anonymized coordinate fixture reproduces the 120 Hz display / 30 Hz camera
+failure and checks that recorded sweeps activate while the quiet tail does not.
+
+## Opt-in motion simulation
+
+Motion simulations and recorded-camera replays are intentionally separate from
+`node --test tests/*.test.mjs`. Run them explicitly when changing motion logic:
+
+```sh
+node simulation/run.mjs
+node --test simulation/*.test.mjs
+```
+
+The CLI runs straight back-and-forth motion, a continuous ellipse, slow movement,
+and stationary noise through the real `PoseProcessor` and `SliceMotion`. Its
+minimal DOM stub replaces only canvas creation. Defaults match the recording's
+480 px video height, 30 Hz camera and 120 Hz display; trajectories and noise are
+synthetic approximations, not an exact statistical fit of the recognition model.
+Output reports percentage of red frames, activation transitions per minute,
+longest uninterrupted red interval, processed camera samples, and red frames
+on injected jumps. For `noise` and `slow`, activations are false positives; for
+`line`, reactivation around direction changes is expected.
+
+Noise parameters are explicit and reproducible:
+
+| Flag | Default | Meaning |
+| --- | --- | --- |
+| `--noise-std` | 1.5 | Stationary Gaussian standard deviation in pixels per axis |
+| `--noise-correlation` | 0.6 | Correlation between neighbouring camera samples, between -1 and 1 |
+| `--seed` | 42 | Integer random seed |
+| `--duration` | 30 | Simulated seconds per scenario, without waiting in real time |
+| `--camera-fps` | 30 | New wrist measurements per second |
+| `--display-fps` | 120 | Display updates per second, including repeated measurements |
+| `--height` | 480 | Video height in pixels; noise remains in pixels when height changes |
+| `--speed` | 0.6 | Straight-line speed in video heights per second |
+| `--ellipse-period` | 3 | Seconds per ellipse; radii are 0.38 and 0.18 video heights |
+| `--jump-rate` | 0 | Mean single-camera-frame recognition jumps per second |
+| `--jump-size` | 0.6 | Jump distance in video heights, in a random direction |
+| `--output` | none | Save parameters, metrics and complete coordinate/activation timeline as JSON |
+
+```sh
+node simulation/run.mjs --noise-std 3 --noise-correlation 0.6 --duration 120 --seed 7
+node simulation/run.mjs --jump-rate 0.1 --jump-size 0.6
+node simulation/run.mjs --noise-std 6 --output /tmp/motion-stress.json
+```
+
+The opt-in suite checks several random seeds and camera/display rates. With
+normal jitter (1.5 px, correlation 0.6), moving paths must stay red over 85% of
+the time, while stationary/slow paths allow at most 0.2% red frames and one false
+activation per minute. At 3 px jitter the explicit stress budget is under 2% red
+frames, at most 15 false activations per minute, and no red burst over 0.25 s.
+These budgets are test bounds for the specified noise models, not guarantees for
+arbitrarily strong noise. Increasing noise to 6 px can produce frequent false
+positives; the CLI exposes that failure instead of silently loosening assertions.

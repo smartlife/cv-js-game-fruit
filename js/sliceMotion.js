@@ -2,7 +2,7 @@ import {
   ACTIVE_SPEED_FRACTION, SLICE_MIN_STEPS, SLICE_MIN_STEP_FRACTION,
   SLICE_MIN_TRAVEL_FRACTION, SLICE_MIN_DURATION, SLICE_MAX_SAMPLE_GAP,
   SLICE_MIN_DIRECTION_COSINE, SLICE_MIN_STRAIGHTNESS,
-  SLICE_CONTINUE_SPEED_FRACTION, SLICE_PAUSE_GRACE
+  SLICE_CONTINUE_SPEED_FRACTION, SLICE_PAUSE_GRACE, SLICE_MAX_STEP_FRACTION
 } from './config.js';
 
 /**
@@ -10,6 +10,7 @@ import {
  * alternating jitter. After confirmation use a lower speed threshold and allow
  * 80 ms of stalled estimates, so a broad stroke does not flicker on every slow
  * frame. Reversals, tracking loss and invalid sample gaps reset immediately.
+ * Large single-frame relocations reset the baseline without sweeping a slice.
  * Retain a trailing window with enough time and travel to confirm the stroke.
  */
 export default class SliceMotion {
@@ -40,6 +41,13 @@ export default class SliceMotion {
     const dy = point.y - previous.y;
     const distance = Math.hypot(dx, dy);
     const speed = validInterval ? distance / dt : 0;
+    if (distance > height * SLICE_MAX_STEP_FRACTION) {
+      this.reset();
+      this.previous = { x: point.x, y: point.y };
+      this.diagnostics = { wasActive, active: false, dx, dy, distance, speed,
+        normalizedSpeed: speed / height, reasons: ['position-jump'] };
+      return { ...point, vx: 0, vy: 0, speed: 0, active: false, prevX: point.x, prevY: point.y };
+    }
     let active = false;
     let directionCosine = null;
     let directionReset = false;
