@@ -60,7 +60,8 @@ confirmation. The same detector controls the start
 button and fruit slicing, separately for each hand. Tune the `SLICE_*` constants
 in `js/config.js` together with `ACTIVE_SPEED_FRACTION`.
 
-Temporary motion diagnostics: use the mouse buttons in the bottom-left panel to
+Temporary motion diagnostics: set `SHOW_MOTION_DEBUG_PANEL = true` in
+`js/config.js` to reveal the panel (hidden by default), then use the mouse buttons in the bottom-left panel to
 start a new recording, stop it, then download JSON. Recording is off by default
 and stays stopped after reload. The last recording is stored under
 `fruit-slice:motion-debug:v1` in LocalStorage, flushed once per second and on

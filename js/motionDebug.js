@@ -65,10 +65,14 @@ let storage = null;
 try { storage = globalThis.localStorage ?? null; } catch { /* Download still works without storage. */ }
 export const motionDebug = new MotionDebugRecorder(storage);
 
-/** Mouse buttons live above every game screen. Downloads use a local Blob,
+/** The config flag reveals the initially hidden panel and enables its controls.
+ * Mouse buttons live above every game screen. Downloads use a local Blob,
  * and starting a new recording replaces the previous one only on explicit click.
  */
 export function initMotionDebugPanel() {
+  const panel = document.getElementById('motion-debug');
+  panel.hidden = !config.SHOW_MOTION_DEBUG_PANEL;
+  if (!config.SHOW_MOTION_DEBUG_PANEL) return;
   const toggle = document.getElementById('motion-debug-toggle');
   const download = document.getElementById('motion-debug-download');
   const status = document.getElementById('motion-debug-status');

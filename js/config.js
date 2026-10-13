@@ -1,3 +1,5 @@
+// Set true to show the mouse-operated motion recording panel.
+export const SHOW_MOTION_DEBUG_PANEL = false;
 export const DEBUG = true; // enable debug logs
 export const USE_STUB = false; // use synthetic hand movement instead of webcam
 // Minimum confidence score for keypoints to be considered valid
