@@ -25,14 +25,14 @@ test('smooth arcs remain valid as their direction turns', () => {
 test('stationary noise, isolated jumps, slow motion and small bursts cannot slice', () => {
   for (const points of [
     [0, 20, -20, 20, -20, 0], [0, 0, 100, 0, 0, 0],
-    [0, 2, 4, 6, 8, 10], [0, 9, 18, 27]
+    [0, 2, 4, 6, 8, 10], [0, 6, 12, 18]
   ]) assert.ok(run(points.map(x => point(x))).every(h => !h.active));
   assert.ok(run([0, 20, 40, 60].map(x => point(x)), 0.1).every(h => !h.active));
 });
 
-test('a reversal or stop immediately disables slicing and needs a new run', () => {
+test('a reversal immediately disables slicing; a short stop gets a grace period', () => {
   assert.deepEqual(run([0, 20, 40, 60, 40, 20, 0, 0].map(x => point(x))).map(h => h.active),
-    [false, false, false, true, false, false, true, false]);
+    [false, false, false, true, false, false, true, true]);
 });
 
 test('lost tracking, invalid timing and pauses cannot bridge a stroke', () => {
@@ -84,4 +84,21 @@ test('PoseProcessor applies confirmation independently to both hands', async (t)
   }
   pose.stop();
   assert.equal((await pose.update(1 / 60, false)).left.active, false);
+});
+
+
+test('broad moderate strokes stay active despite speed dips and stalled estimates', () => {
+  const xs = [0, 12, 24, 36];
+  for (let i = 0; i < 12; i++) xs.push(xs.at(-1) + (i % 3 === 0 ? 0 : 6));
+  assert.ok(run(xs.map(x => point(x))).slice(3).every(h => h.active));
+  const stopped = run([0, 12, 24, 36, ...Array(12).fill(36)].map(x => point(x)));
+  assert.equal(stopped.at(-1).active, false);
+});
+
+test('moderate wide arcs work across tracking rates', () => {
+  for (const fps of [20, 30, 60, 120]) {
+    const points = Array.from({ length: fps }, (_, i) => point(
+      300 * Math.cos(i / fps * 1.2), 300 * Math.sin(i / fps * 1.2)));
+    assert.ok(run(points, 1 / fps).slice(Math.ceil(fps * 0.15)).every(h => h.active));
+  }
 });

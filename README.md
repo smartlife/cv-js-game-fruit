@@ -50,10 +50,12 @@ run first on ties. If storage is blocked or full, results remain in memory for
 the session and the completion screen shows a notice.
 
 Slicing requires at least three consecutive fast movements, at least 35 ms of
-motion and travel of 4% of the video height. Neighbouring steps may turn by up
-to 60 degrees, and net displacement must be at least 80% of travelled distance
+motion and travel of 2.5% of the video height. Neighbouring steps may turn by up
+to about 80 degrees, and net displacement must be at least 65% of travelled distance
 in the trailing confirmation window, allowing smooth arcs while rejecting
-back-and-forth jitter. Slow or tiny steps, reversals, missing wrists, and sample
-gaps over 150 ms reset confirmation. The same detector controls the start
+back-and-forth jitter. Activation requires 25% of video height per second; confirmed strokes can
+continue at 12% per second and tolerate stalled estimates for up to 80 ms.
+Longer stops, reversals, missing wrists, and sample gaps over 150 ms reset
+confirmation. The same detector controls the start
 button and fruit slicing, separately for each hand. Tune the `SLICE_*` constants
 in `js/config.js` together with `ACTIVE_SPEED_FRACTION`.
