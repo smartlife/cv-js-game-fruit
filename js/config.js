@@ -9,6 +9,8 @@ export const SLICE_MIN_STEPS = 3;
 export const SLICE_MIN_STEP_FRACTION = 0.001;
 export const SLICE_MIN_TRAVEL_FRACTION = 0.025;
 export const SLICE_MIN_DURATION = 0.035; // seconds; reject very brief recognition bursts
+// Reject implausible single-frame wrist relocations without a cutting segment.
+export const SLICE_MAX_STEP_FRACTION = 0.25;
 export const SLICE_MAX_SAMPLE_GAP = 0.15; // seconds; do not bridge tracking pauses
 export const SLICE_MIN_DIRECTION_COSINE = 0.17; // up to about 80 degrees between steps
 export const SLICE_MIN_STRAIGHTNESS = 0.65; // net displacement / travelled distance
