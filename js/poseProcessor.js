@@ -1,5 +1,6 @@
 import { USE_STUB, MIN_KP_SCORE, debug } from './config.js';
 import SliceMotion from './sliceMotion.js';
+import { motionDebug } from './motionDebug.js';
 
 export default class PoseProcessor {
   static stream = null;       // shared webcam MediaStream
@@ -115,6 +116,8 @@ export default class PoseProcessor {
   }
 
   async update(dt, draw = true) {
+    const updateStartedMs = performance.now();
+    let rawWrists = null;
     let left = null;
     let right = null;
     if (USE_STUB) {
@@ -134,6 +137,8 @@ export default class PoseProcessor {
         const scaleY = this.canvas.height / this.video.videoHeight;
         const leftKP = pose.keypoints.find(p => p.name === 'left_wrist');
         const rightKP = pose.keypoints.find(p => p.name === 'right_wrist');
+        rawWrists = { left: leftKP ? { x: leftKP.x, y: leftKP.y, score: leftKP.score } : null,
+          right: rightKP ? { x: rightKP.x, y: rightKP.y, score: rightKP.score } : null };
         if (leftKP && leftKP.score > MIN_KP_SCORE) {
           const x = leftKP.x * scaleX;
           left = { x: this.canvas.width - x, y: leftKP.y * scaleY };
@@ -149,6 +154,18 @@ export default class PoseProcessor {
       left: this.motion.left.update(left, dt, this.canvas.height),
       right: this.motion.right.update(right, dt, this.canvas.height)
     };
+
+    if (motionDebug.recording) {
+      const timestampMs = performance.now();
+      motionDebug.append({ timestampMs, dt, updateStartedMs,
+        processingMs: timestampMs - updateStartedMs,
+        sampleIntervalMs: this.lastDebugSampleMs == null ? null : timestampMs - this.lastDebugSampleMs,
+        screen: this.canvas.closest('.screen')?.id,
+        canvas: { width: this.canvas.width, height: this.canvas.height },
+        video: { width: this.video.videoWidth, height: this.video.videoHeight, currentTime: this.video.currentTime },
+        rawWrists, hands, diagnostics: { left: this.motion.left.diagnostics, right: this.motion.right.diagnostics } });
+      this.lastDebugSampleMs = timestampMs;
+    } else this.lastDebugSampleMs = null;
 
     if (draw) {
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
