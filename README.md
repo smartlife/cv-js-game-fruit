@@ -59,3 +59,13 @@ Longer stops, reversals, missing wrists, and sample gaps over 150 ms reset
 confirmation. The same detector controls the start
 button and fruit slicing, separately for each hand. Tune the `SLICE_*` constants
 in `js/config.js` together with `ACTIVE_SPEED_FRACTION`.
+
+Temporary motion diagnostics: use the mouse buttons in the bottom-left panel to
+start a new recording, stop it, then download JSON. Recording is off by default
+and stays stopped after reload. The last recording is stored under
+`fruit-slice:motion-debug:v1` in LocalStorage, flushed once per second and on
+stop. Starting again replaces it. Capture stops at 1500 frames to bound storage;
+if storage is unavailable, download still works until the page closes.
+Logs contain wrist coordinates/confidence, video and canvas dimensions, mode,
+sample/processing timing, per-hand activation and every detector gate, plus
+threshold settings. They contain no webcam images/video and are not uploaded.

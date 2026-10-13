@@ -18,6 +18,7 @@ export default class SliceMotion {
   }
 
   reset() {
+    this.diagnostics = { reasons: ["reset"] };
     this.previous = null;
     this.steps = [];
     this.active = false;
@@ -27,9 +28,12 @@ export default class SliceMotion {
   update(point, dt, height) {
     if (!point || !Number.isFinite(point.x) || !Number.isFinite(point.y)) {
       this.reset();
+      this.diagnostics = { reasons: ["missing-or-invalid-wrist"] };
       return null;
     }
     const validInterval = Number.isFinite(dt) && dt > 0 && dt <= SLICE_MAX_SAMPLE_GAP;
+    const wasActive = this.active;
+    const hadPrevious = !!this.previous;
     if (!validInterval) this.reset();
     const previous = validInterval && this.previous ? this.previous : point;
     const dx = point.x - previous.x;
@@ -37,11 +41,15 @@ export default class SliceMotion {
     const distance = Math.hypot(dx, dy);
     const speed = validInterval ? distance / dt : 0;
     let active = false;
+    let directionCosine = null;
+    let directionReset = false;
     const speedThreshold = this.active ? SLICE_CONTINUE_SPEED_FRACTION : ACTIVE_SPEED_FRACTION;
     if (speed > height * speedThreshold && distance >= height * SLICE_MIN_STEP_FRACTION) {
       this.pauseDuration = 0;
       const last = this.steps.at(-1);
-      if (last && (dx * last.dx + dy * last.dy) / (distance * last.distance) < SLICE_MIN_DIRECTION_COSINE) {
+      directionCosine = last ? (dx * last.dx + dy * last.dy) / (distance * last.distance) : null;
+      if (last && directionCosine < SLICE_MIN_DIRECTION_COSINE) {
+        directionReset = true;
         this.steps = [];
         this.active = false;
       }
@@ -64,6 +72,27 @@ export default class SliceMotion {
       active = this.active && this.pauseDuration < SLICE_PAUSE_GRACE;
       if (!active) this.steps = [];
     }
+    // Capture all gates without changing the activation decision, so recorded
+    // white frames explain which threshold or reset prevented confirmation.
+    const travel = this.steps.reduce((sum, step) => sum + step.distance, 0);
+    const duration = this.steps.reduce((sum, step) => sum + step.dt, 0);
+    const netX = this.steps.reduce((sum, step) => sum + step.dx, 0);
+    const netY = this.steps.reduce((sum, step) => sum + step.dy, 0);
+    const straightness = travel ? Math.hypot(netX, netY) / travel : 0;
+    const gates = {
+      validInterval, hadPrevious, speed: speed > height * speedThreshold,
+      stepDistance: distance >= height * SLICE_MIN_STEP_FRACTION,
+      steps: this.steps.length >= SLICE_MIN_STEPS, duration: duration >= SLICE_MIN_DURATION,
+      travel: travel >= height * SLICE_MIN_TRAVEL_FRACTION,
+      straightness: straightness >= SLICE_MIN_STRAIGHTNESS
+    };
+    this.diagnostics = { wasActive, active, dx, dy, distance, speed,
+      normalizedSpeed: speed / height, speedThresholdPx: height * speedThreshold,
+      directionCosine, directionReset, steps: this.steps.length, travel, duration,
+      straightness, pauseDuration: this.pauseDuration, gates,
+      reasons: [...Object.entries(gates).filter(([, passed]) => !passed).map(([name]) => name),
+        ...(directionReset ? ['direction-reset'] : []),
+        ...(active ? [gates.speed && gates.stepDistance ? 'confirmed' : 'pause-grace'] : [])] };
     this.active = active;
     this.previous = { x: point.x, y: point.y };
     return { ...point, vx: validInterval ? dx / dt : 0, vy: validInterval ? dy / dt : 0,
