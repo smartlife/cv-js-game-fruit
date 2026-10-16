@@ -37,7 +37,8 @@ Cutting a strawberry awards no points and triples the fruit spawn rate for
 remains, the multiplier is `1 + 20 / remainingSeconds`, preserving the expected
 extra twenty seconds of normal spawns. Strawberries do not spawn during the
 boost, and strawberries already on screen cannot stack or refresh it. The
-next-level preview explains the effect when introducing strawberries.
+next-level preview shows `x3 fruit spawns for 10 seconds; no points` when
+introducing strawberries, reading the multiplier and duration from gameplay config.
 Configure this effect with `spawnBoost.duration` and `spawnBoost.multiplier`
 in `js/fruitConfig.js`.
 

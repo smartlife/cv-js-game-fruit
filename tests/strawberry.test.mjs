@@ -82,7 +82,7 @@ test('edge berries track remaining budget and remove topmost layers first', () =
     mode.fruitsPerSecond = 2;
     mode.handleSpawnBoost({ type: 'strawberry' });
     const original = [...mode.strawberryIndicators];
-    assert.equal(original.length, 20);
+    assert.equal(original.length, 40);
     for (const berry of original) {
       assert.ok(berry.offset >= -0.3 && berry.offset <= 0.3);
       assert.ok(berry.y >= 0 && berry.y <= 1);
@@ -93,8 +93,8 @@ test('edge berries track remaining budget and remove topmost layers first', () =
     mode.spawnFruit = () => {};
     mode.advanceSpawning(mode.spawnBoostDuration / 2);
     mode.updateStrawberryIndicators();
-    assert.deepEqual(mode.strawberryIndicators, original.slice(0, 10));
-    assert.equal(mode.strawberryIndicators[9], original[9]);
+    assert.deepEqual(mode.strawberryIndicators, original.slice(0, 20));
+    assert.equal(mode.strawberryIndicators[19], original[19]);
     mode.advanceSpawning(mode.spawnBoostRemaining);
     mode.updateStrawberryIndicators();
     assert.equal(mode.strawberryIndicators.length, 0);
