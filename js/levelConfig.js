@@ -2,7 +2,7 @@ import { FRUITS } from './fruitConfig.js';
 
 export const LEVELS = [
   {
-    time: 15,
+    time: 10,
     fruitsPerSecond: 1.2,
     speed: 0.5,
     fruits: [
@@ -10,7 +10,7 @@ export const LEVELS = [
     ],
   },
   {
-    time: 30,
+    time: 20,
     fruitsPerSecond: 1.4,
     speed: 0.6,
     fruits: [
@@ -20,7 +20,7 @@ export const LEVELS = [
   },
 
   {
-    time: 40,
+    time: 30,
     fruitsPerSecond: 1.8,
     speed: 0.7,
     fruits: [
@@ -31,7 +31,7 @@ export const LEVELS = [
   },
 
   {
-    time: 50,
+    time: 40,
     fruitsPerSecond: 1.7,
     speed: 0.8,
     fruits: [
@@ -43,7 +43,7 @@ export const LEVELS = [
   },
 
   {
-    time: 60,
+    time: 50,
     fruitsPerSecond: 1.8,
     speed: 0.9,
     fruits: [
@@ -134,16 +134,16 @@ export const LEVELS = [
     fruits: [
       { type: 'pineapple', priority: 0.5 },
       { type: 'pear', priority: 0.7 },
-      { type: 'apple', priority: 0.9 },
-      { type: 'mandarine', priority: 1.2 },
-      { type: 'blueberry', priority: 1.5 },
+      { type: 'apple', priority: 1 },
+      { type: 'mandarine', priority: 0.8 },
+      { type: 'blueberry', priority: 0.4 },
       { type: 'robot', priority: 0.2 },
     ],
   },
 
   {
     time: 60,
-    fruitsPerSecond: 3,
+    fruitsPerSecond: 4,
     speed: 1.2,
     fruits: [
       { type: 'pineapple', priority: 0.5 },
@@ -151,8 +151,7 @@ export const LEVELS = [
       { type: 'apple', priority: 1 },
       { type: 'mandarine', priority: 0.5 },
       { type: 'blueberry', priority: 0.2 },
-      { type: 'robot', priority: 0.1 },
-      { type: 'strawberry', priority: 0.4 },
+      { type: 'strawberry', priority: 0.3 },
     ],
   },  
 ];
