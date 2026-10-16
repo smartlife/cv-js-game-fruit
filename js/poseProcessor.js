@@ -1,4 +1,6 @@
-import { DEBUG, USE_STUB, MIN_KP_SCORE, ACTIVE_SPEED_FRACTION, debug } from './config.js';
+import { USE_STUB, MIN_KP_SCORE, SLICE_MAX_SAMPLE_GAP, debug } from './config.js';
+import SliceMotion from './sliceMotion.js';
+import { motionDebug } from './motionDebug.js';
 
 export default class PoseProcessor {
   static stream = null;       // shared webcam MediaStream
@@ -8,9 +10,25 @@ export default class PoseProcessor {
     this.video = videoElement;
     this.canvas = canvasElement;
     this.ctx = this.canvas.getContext('2d');
+    // Keep cursor artwork outside the camera container's stacking context so
+    // it remains visible over headings, the leaderboard, and the game HUD.
+    this.handCanvas = document.createElement('canvas');
+    this.handCanvas.className = 'hand-overlay';
+    this.handCanvas.setAttribute('aria-hidden', 'true');
+    this.canvas.closest('.screen').appendChild(this.handCanvas);
+    this.handCtx = this.handCanvas.getContext('2d');
     this.detector = null; // will reference the shared detector
-    this.prevLeft = null;
-    this.prevRight = null;
+    this.motion = { left: new SliceMotion(), right: new SliceMotion() };
+    this.resetSampling();
+  }
+
+  // A camera frame is one measurement, even when the display refreshes faster.
+  // Reset sampling on mode changes so old strokes cannot carry into a new mode.
+  resetSampling() {
+    this.lastFrameTime = null;
+    this.lastSampleWallMs = null;
+    this.lastHands = { left: null, right: null };
+    this.lastDebugSampleMs = null;
   }
 
   /**
@@ -21,6 +39,9 @@ export default class PoseProcessor {
    * MoveNet model downloads.
    */
   async init(onVideoReady = null) {
+    this.resetSampling();
+    this.motion.left.reset();
+    this.motion.right.reset();
     if (USE_STUB) {
       // use synthetic animation instead of webcam
       this.fakeT = 0;
@@ -73,7 +94,12 @@ export default class PoseProcessor {
     return poses[0] || null;
   }
 
+  // Mirror the gameplay coordinate system on the foreground layer and clear
+  // old trails even when tracking is lost. Resizing only happens when needed.
   drawPalms(hands) {
+    if (this.handCanvas.width !== this.canvas.width) this.handCanvas.width = this.canvas.width;
+    if (this.handCanvas.height !== this.canvas.height) this.handCanvas.height = this.canvas.height;
+    this.handCtx.clearRect(0, 0, this.handCanvas.width, this.handCanvas.height);
     if (!hands) return;
     const r = this.canvas.height * 0.03;
     ['left', 'right'].forEach(side => {
@@ -81,29 +107,57 @@ export default class PoseProcessor {
       if (!h) return;
       const color = h.active ? 'rgba(255,0,0,0.7)' : 'rgba(255,255,255,0.7)';
       // draw previous position
-      this.ctx.fillStyle = color;
-      this.ctx.beginPath();
-      this.ctx.arc(h.prevX, h.prevY, r, 0, Math.PI * 2);
-      this.ctx.fill();
+      this.handCtx.fillStyle = color;
+      this.handCtx.beginPath();
+      this.handCtx.arc(h.prevX, h.prevY, r, 0, Math.PI * 2);
+      this.handCtx.fill();
       // draw connecting segment
-      this.ctx.strokeStyle = color;
-      this.ctx.lineWidth = r * 2;
-      this.ctx.lineCap = 'round';
-      this.ctx.beginPath();
-      this.ctx.moveTo(h.prevX, h.prevY);
-      this.ctx.lineTo(h.x, h.y);
-      this.ctx.stroke();
+      this.handCtx.strokeStyle = color;
+      this.handCtx.lineWidth = r * 2;
+      this.handCtx.lineCap = 'round';
+      this.handCtx.beginPath();
+      this.handCtx.moveTo(h.prevX, h.prevY);
+      this.handCtx.lineTo(h.x, h.y);
+      this.handCtx.stroke();
       // draw current position
-      this.ctx.beginPath();
-      this.ctx.arc(h.x, h.y, r, 0, Math.PI * 2);
-      this.ctx.fill();
+      this.handCtx.beginPath();
+      this.handCtx.arc(h.x, h.y, r, 0, Math.PI * 2);
+      this.handCtx.fill();
     });
   }
 
+  /** Process each camera timestamp once and use camera elapsed seconds for
+   * velocity. Repeated display frames retain the indicator but have a zero-length
+   * collision segment; replaying the last stroke would cut unrelated fruit.
+   * A stalled feed clears tracking after the normal maximum sample gap.
+   */
   async update(dt, draw = true) {
+    const updateStartedMs = performance.now();
+    const renderDt = dt;
+    const frameTime = this.video.currentTime;
+    if (!USE_STUB && Number.isFinite(frameTime)) {
+      if (frameTime === this.lastFrameTime) {
+        const stale = (updateStartedMs - this.lastSampleWallMs) / 1000 > SLICE_MAX_SAMPLE_GAP;
+        if (stale) {
+          this.motion.left.reset();
+          this.motion.right.reset();
+          this.lastHands = { left: null, right: null };
+        }
+        const held = Object.fromEntries(Object.entries(this.lastHands).map(([side, hand]) =>
+          [side, hand ? { ...hand, prevX: hand.x, prevY: hand.y, vx: 0, vy: 0, speed: 0 } : null]));
+        if (draw) {
+          this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+          this.drawPalms(held);
+        }
+        return held;
+      }
+      dt = this.lastFrameTime == null ? 0 : frameTime - this.lastFrameTime;
+      this.lastFrameTime = frameTime;
+      this.lastSampleWallMs = updateStartedMs;
+    }
+    let rawWrists = null;
     let left = null;
     let right = null;
-    const threshold = this.canvas.height * ACTIVE_SPEED_FRACTION;
     if (USE_STUB) {
       this.fakeT += dt;
       const amp = this.canvas.height * 0.3;
@@ -121,6 +175,8 @@ export default class PoseProcessor {
         const scaleY = this.canvas.height / this.video.videoHeight;
         const leftKP = pose.keypoints.find(p => p.name === 'left_wrist');
         const rightKP = pose.keypoints.find(p => p.name === 'right_wrist');
+        rawWrists = { left: leftKP ? { x: leftKP.x, y: leftKP.y, score: leftKP.score } : null,
+          right: rightKP ? { x: rightKP.x, y: rightKP.y, score: rightKP.score } : null };
         if (leftKP && leftKP.score > MIN_KP_SCORE) {
           const x = leftKP.x * scaleX;
           left = { x: this.canvas.width - x, y: leftKP.y * scaleY };
@@ -132,28 +188,23 @@ export default class PoseProcessor {
       }
     }
 
-    const hands = { left: null, right: null };
-    if (left) {
-      const prev = this.prevLeft || left;
-      const v = this.prevLeft && dt > 0 ? {
-        vx: (left.x - this.prevLeft.x) / dt,
-        vy: (left.y - this.prevLeft.y) / dt
-      } : { vx: 0, vy: 0 };
-      const speed = Math.hypot(v.vx, v.vy);
-      hands.left = { ...left, ...v, speed, active: speed > threshold, prevX: prev.x, prevY: prev.y };
-    }
-    if (right) {
-      const prev = this.prevRight || right;
-      const v = this.prevRight && dt > 0 ? {
-        vx: (right.x - this.prevRight.x) / dt,
-        vy: (right.y - this.prevRight.y) / dt
-      } : { vx: 0, vy: 0 };
-      const speed = Math.hypot(v.vx, v.vy);
-      hands.right = { ...right, ...v, speed, active: speed > threshold, prevX: prev.x, prevY: prev.y };
-    }
+    const hands = {
+      left: this.motion.left.update(left, dt, this.canvas.height),
+      right: this.motion.right.update(right, dt, this.canvas.height)
+    };
 
-    this.prevLeft = left;
-    this.prevRight = right;
+    this.lastHands = hands;
+    if (motionDebug.recording) {
+      const timestampMs = performance.now();
+      motionDebug.append({ timestampMs, dt, renderDt, frameTime, updateStartedMs,
+        processingMs: timestampMs - updateStartedMs,
+        sampleIntervalMs: this.lastDebugSampleMs == null ? null : timestampMs - this.lastDebugSampleMs,
+        screen: this.canvas.closest('.screen')?.id,
+        canvas: { width: this.canvas.width, height: this.canvas.height },
+        video: { width: this.video.videoWidth, height: this.video.videoHeight, currentTime: this.video.currentTime },
+        rawWrists, hands, diagnostics: { left: this.motion.left.diagnostics, right: this.motion.right.diagnostics } });
+      this.lastDebugSampleMs = timestampMs;
+    } else this.lastDebugSampleMs = null;
 
     if (draw) {
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -164,6 +215,9 @@ export default class PoseProcessor {
   }
 
   stop() {
+    this.resetSampling();
+    this.motion.left.reset();
+    this.motion.right.reset();
     if (USE_STUB) return;
     if (this.video && this.video.srcObject) {
       // Only pause playback to keep the shared webcam stream alive

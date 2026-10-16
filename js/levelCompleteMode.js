@@ -12,12 +12,12 @@ export default class LevelCompleteMode {
     this.video = document.getElementById('complete-video');
     this.canvas = document.getElementById('complete-canvas');
     this.levelLabel = document.getElementById('level-finished');
-    this.rankLabel = document.getElementById('current-rank');
     this.rankingRows = document.getElementById('leaderboard-rows');
-    this.rankingNote = document.getElementById('leaderboard-note');
-    this.scoreLabel = document.getElementById('final-score');
     this.continueFruit = document.getElementById('continue-fruit');
     this.continueText = document.getElementById('continue-text');
+    this.nextLevelInfo = document.getElementById('next-level-info');
+    this.newFruitDescription = document.getElementById('new-fruit-description');
+    this.nextLevelLabel = document.getElementById('next-level-label');
     this.newFruitBox = document.getElementById('new-fruit-box');
     this.newFruitImg = document.getElementById('new-fruit-img');
     this.newFruitScore = document.getElementById('new-fruit-score');
@@ -48,22 +48,34 @@ export default class LevelCompleteMode {
   }
 
   // Render all retained runs, highlighting this completion by identity rather
-  // than score so equal scores still highlight exactly one row. Use textContent
-  // for stored values, and expose storage failures without blocking play.
+  // than score so equal scores still highlight exactly one enlarged result. Use textContent
+  // for stored values; the highlight identifies the current run without a caption.
   renderLeaderboard() {
-    const { entries, rank, persisted } = recordResult(this.manager.level, this.manager.lastScore);
-    this.rankLabel.textContent = `#${rank}`;
-    this.rankingNote.textContent = `Last ${entries.length} runs · newest wins ties${persisted ? '' : ' · saved for this session only'}`;
+    const { entries } = recordResult(this.manager.level, this.manager.lastScore);
     this.rankingRows.replaceChildren();
     entries.forEach((entry, index) => {
       const row = document.createElement('tr');
       if (entry.current) row.className = 'current-result';
-      const values = [index + 1, entry.current ? 'This run' : new Date(entry.timestamp).toLocaleString([], {
-        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-      }), entry.score];
-      values.forEach(value => {
+      const values = [index + 1, '', entry.score];
+      values.forEach((value, column) => {
+        if (entry.current && column === 1) return;
         const cell = document.createElement('td');
-        cell.textContent = value;
+        if (entry.current && column === 0) cell.colSpan = 2;
+        cell.textContent = entry.current && column === 0 ? `#${value}` : value;
+        if (entry.current && column === 0) cell.id = 'current-rank';
+        if (entry.current && column === 2) cell.id = 'final-score';
+        if (!entry.current && column === 1) {
+          // Use the browser's local date and timezone with a 24-hour clock.
+          // Keep the time together so wrapping never splits the clock value.
+          const date = new Date(entry.timestamp);
+          cell.textContent = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+          const time = document.createElement('span');
+          time.className = 'run-time';
+          time.textContent = date.toLocaleTimeString(undefined, {
+            hour: '2-digit', minute: '2-digit', hour12: false
+          });
+          cell.appendChild(time);
+        }
         row.appendChild(cell);
       });
       this.rankingRows.appendChild(row);
@@ -71,20 +83,23 @@ export default class LevelCompleteMode {
   }
 
   // Record the completed run once on entry, before asynchronous camera setup.
-  // Keep all ten rows visible alongside the rank and delay gesture continuation.
+  // Expand the current run inside the ranking and delay gesture continuation.
   // The final level retains its leaderboard with continuation hidden.
   async enter() {
     this.container.style.display = 'block';
     this.renderLeaderboard();
     await Promise.all([this.pose.init(), loadFruitAspects()]);
-    const h = Math.min(FRUITS.basic.size * 100, 10);
+    const h = 18;
     this.continueFruit.style.height = `${h}vh`;
     this.continueFruit.style.width = `${h * FRUITS.basic.aspect}vh`;
     const newType = this.getNextNewFruit();
     if (newType) {
       const cfg = FRUITS[newType];
-      const nh = Math.min(cfg.size * 80, 6);
+      const nh = 10;
       this.newFruitImg.src = cfg.image;
+      const fruitName = newType === 'basic' ? 'Watermelon' : newType[0].toUpperCase() + newType.slice(1);
+      this.newFruitDescription.textContent = `New: ${fruitName}`;
+      this.newFruitImg.alt = fruitName;
       this.newFruitImg.style.height = `${nh}vh`;
       this.newFruitImg.style.width = `${nh * cfg.aspect}vh`;
       const score = cfg.score;
@@ -93,7 +108,7 @@ export default class LevelCompleteMode {
       } else {
         // Display a '+' only for positive scores so negative values are
         // shown without a redundant sign.
-        this.newFruitScore.textContent = score > 0 ? `+${score}` : `${score}`;
+        this.newFruitScore.textContent = score > 0 ? `+${score} points` : `${score} points`;
       }
       this.newFruitBox.style.display = 'flex';
     } else {
@@ -106,7 +121,8 @@ export default class LevelCompleteMode {
     } else {
       this.levelLabel.textContent = `Level ${levelNum} finished`;
     }
-    this.scoreLabel.textContent = `Score: ${this.manager.lastScore}`;
+    this.nextLevelLabel.textContent = isFinal ? '' : `Next level · ${levelNum + 1}`;
+    this.nextLevelInfo.style.display = isFinal ? 'none' : 'block';
     this.continueFruit.style.visibility = 'hidden';
     this.continueText.style.visibility = 'hidden';
     this.buttonReady = false;
