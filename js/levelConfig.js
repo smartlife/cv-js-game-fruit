@@ -137,7 +137,7 @@ export const LEVELS = [
       { type: 'apple', priority: 1 },
       { type: 'mandarine', priority: 0.8 },
       { type: 'blueberry', priority: 0.4 },
-      { type: 'robot', priority: 0.3 },
+      { type: 'robot', priority: 0.2 },
     ],
   },
 
@@ -151,7 +151,7 @@ export const LEVELS = [
       { type: 'apple', priority: 1 },
       { type: 'mandarine', priority: 0.5 },
       { type: 'blueberry', priority: 0.2 },
-      { type: 'strawberry', priority: 0.4 },
+      { type: 'strawberry', priority: 0.3 },
     ],
   },  
 ];
