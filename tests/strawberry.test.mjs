@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import GameMode from '../js/gameMode.js';
+import { FRUITS } from '../js/fruitConfig.js';
 
 // Exercise gameplay methods without a webcam or DOM; the real constructor only
 // wires those dependencies, while these tests cover boost timing and spawning.
@@ -14,14 +15,14 @@ function game(time = 30) {
 }
 
 
-test('boost preserves ten seconds of extra spawns at the level deadline', () => {
+test('boost preserves twenty seconds of extra spawns at the level deadline', () => {
   for (const time of [30, 10, 5, 0.25]) {
     const mode = game(time);
     mode.handleSpawnBoost({ type: 'strawberry' });
     assert.equal(mode.spawnBoostRemaining, Math.min(time, 10));
-    assert.equal((mode.spawnBoostMultiplier - 1) * mode.spawnBoostRemaining, 10);
+    assert.equal((mode.spawnBoostMultiplier - 1) * mode.spawnBoostRemaining, 20);
     mode.handleSpawnBoost({ type: 'strawberry' });
-    assert.equal((mode.spawnBoostMultiplier - 1) * mode.spawnBoostRemaining, 10);
+    assert.equal((mode.spawnBoostMultiplier - 1) * mode.spawnBoostRemaining, 20);
   }
   const finished = game(0);
   finished.handleSpawnBoost({ type: 'strawberry' });
@@ -39,7 +40,7 @@ test('Poisson integration includes fractional deadlines and splits boost expiry'
     return seed / 4294967296;
   };
   try {
-    for (const [time, elapsed, expected] of [[5, 20, 15], [0.25, 1, 10.25], [30, 12, 22]]) {
+    for (const [time, elapsed, expected] of [[5, 20, 25], [0.25, 1, 20.25], [30, 12, 32]]) {
       let count = 0;
       const trials = 10000;
       for (let i = 0; i < trials; i++) {
@@ -56,17 +57,18 @@ test('Poisson integration includes fractional deadlines and splits boost expiry'
   }
 });
 
-test('two hands cutting the same strawberry award score only once', () => {
+test('cutting a strawberry with both hands gives no points and activates a triple boost', () => {
   const mode = game();
   mode.canvas = { height: 100 };
   mode.score = 0;
   mode.spawnQueue = [];
   mode.updateDisplay = () => {};
-  mode.fruits = [{ type: 'strawberry', alive: true, score: 1,
+  mode.fruits = [{ type: 'strawberry', alive: true, score: FRUITS.strawberry.score,
     prevX: 10, prevY: 10, x: 10, y: 10, boundingRadius: 5 }];
   const hand = { active: true, prevX: 0, prevY: 10, x: 20, y: 10 };
   mode.checkCollisions({ left: hand, right: hand });
-  assert.equal(mode.score, 1);
+  assert.equal(mode.score, 0);
+  assert.equal(mode.spawnBoostMultiplier, 3);
   assert.equal(mode.spawnBoostRemaining, 10);
   assert.equal(mode.fruits.length, 0);
 });

@@ -4,9 +4,9 @@
 export const FRUITS = {
   strawberry: {
     image: 'img/strawberry.png',
-    score: 1,
+    score: 0,
     size: 0.12,
-    spawnBoost: { duration: 10, multiplier: 2 },
+    spawnBoost: { duration: 10, multiplier: 3 },
   },
   basic: {
     image: 'img/watermelon.png',

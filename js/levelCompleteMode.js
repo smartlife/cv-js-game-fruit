@@ -103,7 +103,10 @@ export default class LevelCompleteMode {
       this.newFruitImg.style.height = `${nh}vh`;
       this.newFruitImg.style.width = `${nh * cfg.aspect}vh`;
       const score = cfg.score;
-      if (cfg.scoreMessage) {
+      // Read boost values from gameplay config so the preview stays in sync.
+      if (cfg.spawnBoost) {
+        this.newFruitScore.textContent = `x${cfg.spawnBoost.multiplier} fruit spawns for ${cfg.spawnBoost.duration} seconds; no points`;
+      } else if (cfg.scoreMessage) {
         this.newFruitScore.textContent = cfg.scoreMessage;
       } else {
         // Display a '+' only for positive scores so negative values are
