@@ -95,7 +95,7 @@ export default class PoseProcessor {
     return poses[0] || null;
   }
 
-  // Keep a separate 300 ms visual history, never reused by collision detection.
+  // Keep a separate 240 ms visual history, never reused by collision detection.
   // Only confirmed, moving samples extend the blade; held frames and idle hands
   // let existing artwork fade. Break paths across tracking loss or new strokes.
   drawPalms(hands) {
@@ -108,7 +108,7 @@ export default class PoseProcessor {
     }
     const ctx = this.handCtx;
     const now = performance.now();
-    const lifetime = 300;
+    const lifetime = 240;
     ctx.clearRect(0, 0, this.handCanvas.width, this.handCanvas.height);
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
@@ -125,21 +125,27 @@ export default class PoseProcessor {
         if (!last || last.x !== hand.x || last.y !== hand.y) {
           const connected = last && Math.hypot(last.x - hand.prevX, last.y - hand.prevY) < 0.01;
           if (!connected) trail.push({ x: hand.prevX, y: hand.prevY, time: now, start: true });
-          trail.push({ x: hand.x, y: hand.y, time: now });
+          const point = { x: hand.x, y: hand.y, time: now };
+          trail.push(point);
+          point.tip = this.projectBladeTip(trail);
         }
       }
+      // Prediction is artwork only, fixed per new sample rather than advancing
+      // every display frame. Its timestamp fades with the measured blade head.
+      const head = trail.at(-1);
+      const artwork = head?.tip ? [...trail, { ...head.tip, time: head.time }] : trail;
       // Subdivide segments to taper continuously, with a blue halo, icy ribbon
       // and white cutting edge. Spatial taper also gives fresh strokes a fine tail.
-      for (let i = 1; i < trail.length; i++) {
-        const a = trail[i - 1];
-        const b = trail[i];
+      for (let i = 1; i < artwork.length; i++) {
+        const a = artwork[i - 1];
+        const b = artwork[i];
         if (b.start) continue;
         for (let step = 0; step < 6; step++) {
           const t = (step + 0.5) / 6;
           const freshness = Math.max(0, 1 - (now - (a.time + (b.time - a.time) * t)) / lifetime);
-          const taper = Math.min(1, (i - 1 + t) / Math.max(1, trail.length - 1));
+          const taper = Math.min(1, (i - 1 + t) / Math.max(1, artwork.length - 1));
           const strength = freshness * Math.sqrt(taper);
-          const width = this.canvas.height * 0.021 * strength;
+          const width = this.canvas.height * 0.021 * strength * (1 + 0.8 * taper ** 4);
           for (const [scale, color, opacity] of [
             [2.4, '55,135,255', 0.13],
             [1, '100,210,255', 0.65],
@@ -156,6 +162,43 @@ export default class PoseProcessor {
       }
     }
     ctx.restore();
+  }
+
+  // Average up to three recent measured segments, favouring the newest one.
+  // Stop at stroke boundaries, stale samples or sharp reversals. Scale the
+  // short lead by directional coherence to suppress jitter; cap it at 1.8%
+  // of video height and 40% of an average step, with a hard 12 canvas-pixel
+  // ceiling and the old palm radius (3% of height). Never modify collision hands.
+  projectBladeTip(trail) {
+    const head = trail.at(-1);
+    let dx = 0;
+    let dy = 0;
+    let travel = 0;
+    let weights = 0;
+    let latest = null;
+    for (let i = trail.length - 1, weight = 3; i > 0 && weight > 0; i--, weight--) {
+      const b = trail[i];
+      const a = trail[i - 1];
+      if (b.start || head.time - a.time > 100) break;
+      const x = b.x - a.x;
+      const y = b.y - a.y;
+      const distance = Math.hypot(x, y);
+      if (!distance) continue;
+      if (latest && x * latest.x + y * latest.y <= 0) break;
+      latest ??= { x, y };
+      dx += x * weight;
+      dy += y * weight;
+      travel += distance * weight;
+      weights += weight;
+    }
+    const length = Math.hypot(dx, dy);
+    if (!length || !travel) return null;
+    const coherence = length / travel;
+    const maxLeadPixels = 12;
+    const oldPalmRadius = this.canvas.height * 0.03;
+    const lead = Math.min(maxLeadPixels, oldPalmRadius,
+      this.canvas.height * 0.018, travel / weights * 0.4) * coherence ** 2;
+    return { x: head.x + dx / length * lead, y: head.y + dy / length * lead };
   }
 
   /** Process each camera timestamp once and use camera elapsed seconds for

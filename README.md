@@ -142,8 +142,15 @@ positives; the CLI exposes that failure instead of silently loosening assertions
 ## Blade artwork
 
 All screens share a white-core, ice-blue blade trail with a soft blue halo.
-Confirmed moving hands leave a separate 300 ms history that narrows toward the
+Confirmed moving hands leave a separate 240 ms history that narrows toward the
 tail and fades in real time, independently of level speed. Idle hands show no
 circles; their last trail fades away. Tracking discontinuities break the path,
 and mode changes clear its history. The artwork never participates in hits:
 only the existing current confirmed movement segment cuts fruit or buttons.
+
+The leading ribbon is up to 80% thicker and extends slightly ahead using a
+weighted average of up to three recent measured segments. The visual lead is
+capped at 12 canvas pixels, the old palm circle radius (3% of video height),
+1.8% of video height and 40% of an average step (whichever is smallest), reduced for noisy
+directions, and broken at stroke boundaries or sharp reversals. Prediction is
+fixed per new measurement and fades with the head; it never changes collisions.
