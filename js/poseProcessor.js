@@ -25,6 +25,7 @@ export default class PoseProcessor {
   // A camera frame is one measurement, even when the display refreshes faster.
   // Reset sampling on mode changes so old strokes cannot carry into a new mode.
   resetSampling() {
+    this.bladeTrails = { left: [], right: [] };
     this.lastFrameTime = null;
     this.lastSampleWallMs = null;
     this.lastHands = { left: null, right: null };
@@ -94,40 +95,71 @@ export default class PoseProcessor {
     return poses[0] || null;
   }
 
-  // Mirror the gameplay coordinate system on the foreground layer and clear
-  // old trails even when tracking is lost. Resizing only happens when needed.
+  // Keep a separate 300 ms visual history, never reused by collision detection.
+  // Only confirmed, moving samples extend the blade; held frames and idle hands
+  // let existing artwork fade. Break paths across tracking loss or new strokes.
   drawPalms(hands) {
-    if (this.handCanvas.width !== this.canvas.width) this.handCanvas.width = this.canvas.width;
-    if (this.handCanvas.height !== this.canvas.height) this.handCanvas.height = this.canvas.height;
-    this.handCtx.clearRect(0, 0, this.handCanvas.width, this.handCanvas.height);
-    if (!hands) return;
-    const r = this.canvas.height * 0.03;
-    ['left', 'right'].forEach(side => {
-      const h = hands[side];
-      if (!h) return;
-      const color = h.active ? 'rgba(255,0,0,0.7)' : 'rgba(255,255,255,0.7)';
-      // draw previous position
-      this.handCtx.fillStyle = color;
-      this.handCtx.beginPath();
-      this.handCtx.arc(h.prevX, h.prevY, r, 0, Math.PI * 2);
-      this.handCtx.fill();
-      // draw connecting segment
-      this.handCtx.strokeStyle = color;
-      this.handCtx.lineWidth = r * 2;
-      this.handCtx.lineCap = 'round';
-      this.handCtx.beginPath();
-      this.handCtx.moveTo(h.prevX, h.prevY);
-      this.handCtx.lineTo(h.x, h.y);
-      this.handCtx.stroke();
-      // draw current position
-      this.handCtx.beginPath();
-      this.handCtx.arc(h.x, h.y, r, 0, Math.PI * 2);
-      this.handCtx.fill();
-    });
+    const resized = this.handCanvas.width !== this.canvas.width ||
+      this.handCanvas.height !== this.canvas.height;
+    if (resized) {
+      this.handCanvas.width = this.canvas.width;
+      this.handCanvas.height = this.canvas.height;
+      this.bladeTrails = { left: [], right: [] };
+    }
+    const ctx = this.handCtx;
+    const now = performance.now();
+    const lifetime = 300;
+    ctx.clearRect(0, 0, this.handCanvas.width, this.handCanvas.height);
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    for (const side of ['left', 'right']) {
+      const trail = this.bladeTrails[side];
+      while (trail.length && now - trail[0].time >= lifetime) trail.shift();
+      const hand = hands?.[side];
+      const moving = hand?.active && Math.hypot(hand.x - hand.prevX, hand.y - hand.prevY) > 0.01;
+      if (moving) {
+        const last = trail.at(-1);
+        // Repeated renders of one camera sample must not refresh the trail.
+        if (!last || last.x !== hand.x || last.y !== hand.y) {
+          const connected = last && Math.hypot(last.x - hand.prevX, last.y - hand.prevY) < 0.01;
+          if (!connected) trail.push({ x: hand.prevX, y: hand.prevY, time: now, start: true });
+          trail.push({ x: hand.x, y: hand.y, time: now });
+        }
+      }
+      // Subdivide segments to taper continuously, with a blue halo, icy ribbon
+      // and white cutting edge. Spatial taper also gives fresh strokes a fine tail.
+      for (let i = 1; i < trail.length; i++) {
+        const a = trail[i - 1];
+        const b = trail[i];
+        if (b.start) continue;
+        for (let step = 0; step < 6; step++) {
+          const t = (step + 0.5) / 6;
+          const freshness = Math.max(0, 1 - (now - (a.time + (b.time - a.time) * t)) / lifetime);
+          const taper = Math.min(1, (i - 1 + t) / Math.max(1, trail.length - 1));
+          const strength = freshness * Math.sqrt(taper);
+          const width = this.canvas.height * 0.021 * strength;
+          for (const [scale, color, opacity] of [
+            [2.4, '55,135,255', 0.13],
+            [1, '100,210,255', 0.65],
+            [0.32, '235,250,255', 0.95]
+          ]) {
+            ctx.strokeStyle = `rgba(${color},${opacity * strength})`;
+            ctx.lineWidth = Math.max(0.01, width * scale);
+            ctx.beginPath();
+            ctx.moveTo(a.x + (b.x - a.x) * step / 6, a.y + (b.y - a.y) * step / 6);
+            ctx.lineTo(a.x + (b.x - a.x) * (step + 1) / 6, a.y + (b.y - a.y) * (step + 1) / 6);
+            ctx.stroke();
+          }
+        }
+      }
+    }
+    ctx.restore();
   }
 
   /** Process each camera timestamp once and use camera elapsed seconds for
-   * velocity. Repeated display frames retain the indicator but have a zero-length
+   * velocity. Repeated display frames let the visual trail fade and have a zero-length
    * collision segment; replaying the last stroke would cut unrelated fruit.
    * A stalled feed clears tracking after the normal maximum sample gap.
    */

@@ -7,7 +7,7 @@ This repository now contains the initial structure of a pose‑controlled fruit 
 ## Overview
 
 - **index.html** – loads external pose detection libraries and switches between different game modes.
-- **js/poseProcessor.js** – wrapper around pose detection library. Initializes the webcam stream and pose detector once and draws highlighted palms.
+- **js/poseProcessor.js** – wrapper around pose detection library. Initializes the webcam stream and pose detector once and draws fading ice-blue blade trails.
 - **js/config.js** – global configuration with a `DEBUG` flag, `USE_STUB` to simulate movement without a webcam and `ACTIVE_SPEED_FRACTION` controlling how fast a hand must move to become active.
 - **js/sliceMotion.js** – confirms a slice from consecutive fast, directionally coherent wrist movements, allowing smooth arcs and rejecting recognition jitter.
 - **js/fruitConfig.js** – list of available fruits with image and size. Each
@@ -80,7 +80,7 @@ threshold settings. They contain no webcam images/video and are not uploaded.
 
 Pose updates now consume each camera `currentTime` once, independently of the
 display refresh rate. Speed uses elapsed camera time; repeated display frames
-retain the hand indicator with a zero-length collision segment. A feed stalled
+let the blade trail fade with a zero-length collision segment. A feed stalled
 for over 150 ms clears tracking. Single-sample position jumps over 25% of video
 height reset the stroke without creating a slicing segment. Debug capture logs
 only processed camera samples, including `frameTime` and display `renderDt`.
@@ -138,3 +138,12 @@ frames, at most 15 false activations per minute, and no red burst over 0.25 s.
 These budgets are test bounds for the specified noise models, not guarantees for
 arbitrarily strong noise. Increasing noise to 6 px can produce frequent false
 positives; the CLI exposes that failure instead of silently loosening assertions.
+
+## Blade artwork
+
+All screens share a white-core, ice-blue blade trail with a soft blue halo.
+Confirmed moving hands leave a separate 300 ms history that narrows toward the
+tail and fades in real time, independently of level speed. Idle hands show no
+circles; their last trail fades away. Tracking discontinuities break the path,
+and mode changes clear its history. The artwork never participates in hits:
+only the existing current confirmed movement segment cuts fruit or buttons.
