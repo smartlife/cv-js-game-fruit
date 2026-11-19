@@ -1,6 +1,6 @@
 # Fruit Slice
 
-Fruit Slice is a free, webcam-controlled fruit slicing game. It runs directly in a web browser with no installation. The game uses MoveNet pose estimation to track your wrists and turn quick hand movements into slices.
+Swipe your hand in front of your webcam to slice flying fruit and score points before time runs out. Fruit Slice is free to play right in your browser, with no installation required.
 
 ## How to play
 
@@ -9,4 +9,6 @@ Fruit Slice is a free, webcam-controlled fruit slicing game. It runs directly in
 3. Swipe through flying fruit to score points before the timer runs out. The results screen shows your score and rank among your recent runs for that level.
 4. When the continue fruit appears, slice it to start the next level.
 
-[Technical documentation](docs/technical.md) covers local setup, configuration, and testing.
+## Technical note
+
+Fruit Slice uses MoveNet pose estimation to track wrist movement. See the [technical documentation](docs/technical.md) for local setup, configuration, and testing.
